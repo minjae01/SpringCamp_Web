@@ -1,0 +1,132 @@
+@font-face {
+    font-family: 'CookieRun-Regular';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/CookieRun-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+body {
+  margin: 0;
+  background-color: #000;
+  color: #fff;
+  font-family: 'Noto Sans KR', sans-serif;
+  text-align: center;
+  padding: 1rem;
+}
+
+/* 상단 wrapper */
+.header-wrapper {
+  width: 100%;
+  margin-top: 2rem;
+}
+
+/* 이미지 정렬 */
+.center-images {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0rem;
+  flex-wrap: nowrap;
+}
+
+/* side 이미지 */
+.side-image {
+  width: 22vw;
+  max-width: 100px;
+  height: auto;
+  cursor: pointer;
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-focus-ring-color: transparent;
+  outline: none;
+}
+
+.side-image:focus {
+  outline: none;
+}
+
+/* title 이미지 */
+.header-image {
+  width: 60vw;
+  max-width: 160px;
+  height: auto;
+  pointer-events: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+/* 카드 영역 */
+.container {
+  display: flex;
+  justify-content: center;
+  margin-top: 3rem;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.card {
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  width: 90vw;
+  max-width: 400px;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+  transition: transform 0.2s;
+  font-family: 'CookieRun-Regular', sans-serif;
+}
+
+.card:hover {
+  transform: scale(1.05);
+}
+
+.card-title {
+  padding: 1rem;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+/* 흔들림 효과 */
+@keyframes shake {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(5deg); }
+  50% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.shake {
+  animation: shake 0.5s;
+}
+
+/* 모바일 최적화 */
+@media (max-width: 768px) {
+  .header-wrapper {
+    margin-top: 1rem;
+  }
+
+  .center-images {
+    gap: 0.5rem;
+  }
+
+  .header-image {
+    width: 70vw;
+    max-width: 160px;
+  }
+
+  .side-image {
+    width: 25vw;
+    max-width: 80px;
+  }
+
+  .card-title {
+    font-size: 1rem;
+  }
+}
