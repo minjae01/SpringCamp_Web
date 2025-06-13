@@ -60,36 +60,32 @@ link_dict = {
 # ✅ 하이퍼링크 처리 함수
 
 def auto_link(text: str, word_links: dict) -> str:
-    sorted_words = sorted(word_links.keys(), key=lambda w: -len(w))  # 긴 문장 우선
-
-    # 이미 링크된 영역을 추적하는 리스트
-    linked_ranges = []
+    sorted_words = sorted(word_links.keys(), key=lambda w: -len(w))
+    matches = []
 
     for word in sorted_words:
         url = word_links[word]
         pattern = re.compile(re.escape(word), flags=re.IGNORECASE)
 
-        for match in list(pattern.finditer(text)):
+        for match in pattern.finditer(text):
             start, end = match.start(), match.end()
 
-            # 중복 링크 방지: 기존 링크된 범위에 겹치면 skip
-            if any(s < end and start < e for s, e in linked_ranges):
+            # 겹치는 링크가 이미 있는 경우 skip
+            if any(s < end and start < e for s, e, _ in matches):
                 continue
 
-            # 하이퍼링크 삽입
-            matched_word = match.group(0)
-            anchor = f'<a href="{url}" target="_blank">{matched_word}</a>'
-            text = text[:start] + anchor + text[end:]
+            matches.append((start, end, url))
 
-            # 삽입 후 길이 증가한 만큼 offset 조정
-            delta = len(anchor) - (end - start)
-            linked_ranges = [
-                (s if s < start else s + delta, e if e < start else e + delta)
-                for s, e in linked_ranges
-            ]
-            linked_ranges.append((start, start + len(anchor)))
+    # 뒤에서부터 삽입해야 인덱스가 안 밀림
+    matches.sort(reverse=True)
+
+    for start, end, url in matches:
+        matched_text = text[start:end]
+        anchor = f'<a href="{url}" target="_blank">{matched_text}</a>'
+        text = text[:start] + anchor + text[end:]
 
     return text
+
 
 
 
