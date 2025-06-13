@@ -60,17 +60,19 @@ link_dict = {
 # ✅ 하이퍼링크 처리 함수
 
 def auto_link(text: str, word_links: dict) -> str:
-    sorted_words = sorted(word_links.keys(), key=lambda w: -len(w))
+    sorted_words = sorted(word_links.keys(), key=lambda w: -len(w))  # 공백 포함 길이로 긴 것부터
     for word in sorted_words:
         url = word_links[word]
-        # 단어 경계를 제거하고, 공백 포함 전체 매칭 허용
         pattern = re.compile(re.escape(word), flags=re.IGNORECASE)
 
         def replacer(match):
             matched_word = match.group(0)
-            before = text[max(0, match.start() - 10):match.start()]
-            after = text[match.end():match.end() + 10]
-            if '<a ' in before or '</a>' in after:
+            # 이미 링크된 부분에 중복 링크 방지
+            before = text[max(0, match.start() - 20):match.start()]
+            after = text[match.end():match.end() + 20]
+            if '<a ' in before and '</a>' not in before:
+                return matched_word
+            if '<a ' in after and '</a>' not in after:
                 return matched_word
             return f'<a href="{url}" target="_blank">{matched_word}</a>'
 
