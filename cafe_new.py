@@ -60,25 +60,38 @@ link_dict = {
 # ✅ 하이퍼링크 처리 함수
 
 def auto_link(text: str, word_links: dict) -> str:
-    sorted_words = sorted(word_links.keys(), key=lambda w: -len(w))  # 공백 포함 길이로 긴 것부터
+    sorted_words = sorted(word_links.keys(), key=lambda w: -len(w))  # 긴 문장 우선
+
+    # 이미 링크된 영역을 추적하는 리스트
+    linked_ranges = []
+
     for word in sorted_words:
         url = word_links[word]
         pattern = re.compile(re.escape(word), flags=re.IGNORECASE)
 
-        def replacer(match):
-            matched_word = match.group(0)
-            # 이미 링크된 부분에 중복 링크 방지
-            before = text[max(0, match.start() - 20):match.start()]
-            after = text[match.end():match.end() + 20]
-            if '<a ' in before and '</a>' not in before:
-                return matched_word
-            if '<a ' in after and '</a>' not in after:
-                return matched_word
-            return f'<a href="{url}" target="_blank">{matched_word}</a>'
+        for match in list(pattern.finditer(text)):
+            start, end = match.start(), match.end()
 
-        text = pattern.sub(replacer, text)
+            # 중복 링크 방지: 기존 링크된 범위에 겹치면 skip
+            if any(s < end and start < e for s, e in linked_ranges):
+                continue
+
+            # 하이퍼링크 삽입
+            matched_word = match.group(0)
+            anchor = f'<a href="{url}" target="_blank">{matched_word}</a>'
+            text = text[:start] + anchor + text[end:]
+
+            # 삽입 후 길이 증가한 만큼 offset 조정
+            delta = len(anchor) - (end - start)
+            linked_ranges = [
+                (s if s < start else s + delta, e if e < start else e + delta)
+                for s, e in linked_ranges
+            ]
+            linked_ranges.append((start, start + len(anchor)))
 
     return text
+
+
 
 # ✅ 크롬 브라우저 열기
 options = webdriver.ChromeOptions()
