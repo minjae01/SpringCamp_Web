@@ -55,6 +55,7 @@ link_dict = {
     "farmer's carry": "https://www.youtube.com/watch?v=p5MNNosenJc",
     "overhead lunge": "https://www.youtube.com/watch?v=c-4dfhO8QTw",
     "bar facing burpee": "https://www.youtube.com/watch?v=A6gQLuMMiA4",
+    "squat clean": "https://www.youtube.com/watch?v=YZUdVyVV3uI",
     "burpee over the bar": "https://www.youtube.com/watch?v=D7rAEEE_H9A"
 }
 # ✅ 하이퍼링크 처리 함수
