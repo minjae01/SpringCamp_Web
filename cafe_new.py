@@ -8,7 +8,6 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 link_dict = {
     "double dumbbell front rack lunge": "https://www.youtube.com/watch?v=7EmwtpAI8cM",
-    "burpee over the bar": "https://www.youtube.com/watch?v=D7rAEEE_H9A",
     "dumbbell shoulder to overhead": "https://www.youtube.com/watch?v=AQ50ji32egc",
     "high hang pause power snatch": "https://www.youtube.com/watch?v=JRMGMfRe8zY",
     "lateral burpee bar hop over": "https://www.youtube.com/watch?v=przJ5ZW-YSU",
@@ -55,7 +54,8 @@ link_dict = {
     "cal machine": "https://www.youtube.com/watch?v=fxfhQMbATCw",
     "farmer's carry": "https://www.youtube.com/watch?v=p5MNNosenJc",
     "overhead lunge": "https://www.youtube.com/watch?v=c-4dfhO8QTw",
-    "bar facing burpee": "https://www.youtube.com/watch?v=A6gQLuMMiA4"
+    "bar facing burpee": "https://www.youtube.com/watch?v=A6gQLuMMiA4",
+    "burpee over the bar": "https://www.youtube.com/watch?v=D7rAEEE_H9A"
 }
 # ✅ 하이퍼링크 처리 함수
 
