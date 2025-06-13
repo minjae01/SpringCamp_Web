@@ -8,6 +8,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 link_dict = {
     "double dumbbell front rack lunge": "https://www.youtube.com/watch?v=7EmwtpAI8cM",
+    "burpee over the bar": "https://www.youtube.com/watch?v=D7rAEEE_H9A",
     "dumbbell shoulder to overhead": "https://www.youtube.com/watch?v=AQ50ji32egc",
     "high hang pause power snatch": "https://www.youtube.com/watch?v=JRMGMfRe8zY",
     "lateral burpee bar hop over": "https://www.youtube.com/watch?v=przJ5ZW-YSU",
