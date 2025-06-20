@@ -1,4 +1,5 @@
 import time
+import os
 import datetime
 import re
 from selenium import webdriver
@@ -58,7 +59,6 @@ link_dict = {
     "squat clean": "https://www.youtube.com/watch?v=YZUdVyVV3uI",
     "burpee over the bar": "https://www.youtube.com/watch?v=D7rAEEE_H9A"
 }
-# ✅ 하이퍼링크 처리 함수
 
 def auto_link(text: str, word_links: dict) -> str:
     sorted_words = sorted(word_links.keys(), key=lambda w: -len(w))
@@ -67,114 +67,109 @@ def auto_link(text: str, word_links: dict) -> str:
     for word in sorted_words:
         url = word_links[word]
         pattern = re.compile(re.escape(word), flags=re.IGNORECASE)
-
         for match in pattern.finditer(text):
             start, end = match.start(), match.end()
-
-            # 겹치는 링크가 이미 있는 경우 skip
             if any(s < end and start < e for s, e, _ in matches):
                 continue
-
             matches.append((start, end, url))
 
-    # 뒤에서부터 삽입해야 인덱스가 안 밀림
     matches.sort(reverse=True)
-
     for start, end, url in matches:
         matched_text = text[start:end]
         anchor = f'<a href="{url}" target="_blank">{matched_text}</a>'
         text = text[:start] + anchor + text[end:]
-
     return text
 
+# 📅 월~금 날짜 목록
+today = datetime.date.today()
+monday = today - datetime.timedelta(days=today.weekday())  # 월요일
+weekday_dates = [monday + datetime.timedelta(days=i) for i in range(5)]
 
+all_html_blocks = []
 
+for target_date in weekday_dates:
+    options = webdriver.ChromeOptions()
+    options.add_argument(r"--user-data-dir=C:\\Temp\\SeleniumTestProfile")
+    options.add_argument("--profile-directory=Default")
+    options.add_argument("--start-maximized")
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    print(f"🚀 {target_date} 크롬 실행 중...")
 
-# ✅ 크롬 브라우저 열기
-options = webdriver.ChromeOptions()
-options.add_argument(r"--user-data-dir=C:\\Temp\\SeleniumTestProfile")
-options.add_argument("--profile-directory=Default")
-options.add_argument("--start-maximized")
+    # ✅ 카페 접근
+    cafe_url = "https://cafe.naver.com/f-e/cafes/31082758/menus/2?viewType=L"
+    driver.get(cafe_url)
+    time.sleep(3)
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    time.sleep(3)
 
-print("🚀 크롬 실행 중...")
-driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-print("✅ 브라우저 열림")
+    posts = driver.find_elements(By.CSS_SELECTOR, "a.article")
+    wod_posts = [post for post in posts if "WOD" in post.text]
 
-# ✅ 카페 WOD 게시판 접근
-cafe_url = "https://cafe.naver.com/f-e/cafes/31082758/menus/2?viewType=L"
-driver.get(cafe_url)
-time.sleep(3)
-driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-time.sleep(3)
+    if not wod_posts:
+        print("❗ WOD 게시글을 찾을 수 없습니다.")
+        driver.quit()
+        continue
 
-# ✅ WOD 게시글 찾기
-posts = driver.find_elements(By.CSS_SELECTOR, "a.article")
-wod_posts = [post for post in posts if "WOD" in post.text]
+    latest_post = wod_posts[0]
+    href = latest_post.get_attribute("href")
+    full_link = f"https://cafe.naver.com{href}" if href.startswith("/") else href
 
-if not wod_posts:
-    print("❗ WOD 게시글을 찾을 수 없습니다.")
-    driver.quit()
-    exit()
+    driver.get(full_link)
+    time.sleep(3)
 
-latest_post = wod_posts[0]
-title = latest_post.text
-href = latest_post.get_attribute("href")
-full_link = f"https://cafe.naver.com{href}" if href.startswith("/") else href
-
-driver.get(full_link)
-time.sleep(3)
-
-# ✅ iframe 전환 시도
-try:
-    driver.switch_to.frame("cafe_main")
-except:
-    pass
-
-# ✅ 본문 추출
-try:
-    content_element = driver.find_element(By.CSS_SELECTOR, '.se-main-container')
-    content_text = content_element.text
-except:
     try:
-        content_element = driver.find_element(By.CSS_SELECTOR, '.ContentRenderer')
+        driver.switch_to.frame("cafe_main")
+    except:
+        pass
+
+    try:
+        content_element = driver.find_element(By.CSS_SELECTOR, '.se-main-container')
         content_text = content_element.text
     except:
-        content_text = "(본문을 불러올 수 없습니다.)"
+        try:
+            content_element = driver.find_element(By.CSS_SELECTOR, '.ContentRenderer')
+            content_text = content_element.text
+        except:
+            content_text = "(본문을 불러올 수 없습니다.)"
 
-# ✅ 오늘 날짜 기준 본문 일부 추출
-today_str = datetime.datetime.now().strftime("%Y년 %#m월 %#d일")  # Windows 전용
-lines = content_text.splitlines()
-start_idx = -1
-end_idx = -1
+    # ✅ 날짜 텍스트 추출
+    today_str = target_date.strftime("%Y년 %#m월 %#d일") if os.name == 'nt' else target_date.strftime("%Y년 %-m월 %-d일")
+    lines = content_text.splitlines()
+    start_idx = -1
+    end_idx = -1
 
-for i, line in enumerate(lines):
-    if today_str in line:
-        start_idx = i
+    for i, line in enumerate(lines):
+        if today_str in line:
+            start_idx = i
 
-for i in range(start_idx + 1, len(lines)):
-    if "Beginner" in lines[i]:
-        end_idx = i
-        break
+    for i in range(start_idx + 1, len(lines)):
+        if "Beginner" in lines[i]:
+            end_idx = i
+            break
 
-if start_idx != -1 and end_idx != -1 and start_idx <= end_idx:
-    filtered_lines = lines[start_idx:end_idx + 1]
-    wod_text = "\n".join(filtered_lines)
-else:
-    wod_text = "❗ 오늘 날짜 또는 'Beginner'를 찾을 수 없습니다."
+    if start_idx != -1 and end_idx != -1 and start_idx <= end_idx:
+        filtered_lines = lines[start_idx:end_idx + 1]
+        wod_text = "\n".join(filtered_lines)
+    else:
+        wod_text = f"❗ {today_str} 또는 'Beginner'를 찾을 수 없습니다."
 
-driver.quit()
+    driver.quit()
 
-# ✅ 하이퍼링크 처리
-wod_text = auto_link(wod_text, link_dict)
+    wod_text = auto_link(wod_text, link_dict)
 
-# ✅ wod_text.txt 생성 (HTML 태그 포함)
-html_template = """
-<img src="/static/title.png" alt="Spring Camp Title" class="header-image" />
-<div class="content">
-{}</div>
-""".format(wod_text.replace('\n', '<br>'))
+    # ✅ 날짜별 HTML 블록 저장
+    date_header = f"<h2>{target_date.strftime('%Y-%m-%d')} ({target_date.strftime('%A')})</h2>"
+    html_block = f"""
+    {date_header}
+    <img src="/static/title.png" alt="Spring Camp Title" class="header-image" />
+    <div class="content">{wod_text.replace('\n', '<br>')}</div>
+    <hr>
+    """
+    all_html_blocks.append(html_block)
+    print(f"✅ {target_date.strftime('%Y-%m-%d')} WOD 저장 완료")
 
+# ✅ 최종 통합 파일 저장
 with open("wod_text.txt", "w", encoding="utf-8") as f:
-    f.write(html_template)
+    f.write("\n".join(all_html_blocks))
 
-print("✅ wod_text.txt 생성 완료")
+print("🎉 전체 WOD가 wod_text.txt에 저장 완료되었습니다!")
