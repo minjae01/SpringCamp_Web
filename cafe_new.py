@@ -7,6 +7,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
+# 유튜브 링크 딕셔너리
 link_dict = {
     "double dumbbell front rack lunge": "https://www.youtube.com/watch?v=7EmwtpAI8cM",
     "dumbbell shoulder to overhead": "https://www.youtube.com/watch?v=AQ50ji32egc",
@@ -80,9 +81,9 @@ def auto_link(text: str, word_links: dict) -> str:
         text = text[:start] + anchor + text[end:]
     return text
 
-# 📅 월~금 날짜 목록
+# 📅 월~금 날짜 리스트 생성
 today = datetime.date.today()
-monday = today - datetime.timedelta(days=today.weekday())  # 월요일
+monday = today - datetime.timedelta(days=today.weekday())
 weekday_dates = [monday + datetime.timedelta(days=i) for i in range(5)]
 
 all_html_blocks = []
@@ -95,7 +96,6 @@ for target_date in weekday_dates:
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     print(f"🚀 {target_date} 크롬 실행 중...")
 
-    # ✅ 카페 접근
     cafe_url = "https://cafe.naver.com/f-e/cafes/31082758/menus/2?viewType=L"
     driver.get(cafe_url)
     time.sleep(3)
@@ -132,7 +132,6 @@ for target_date in weekday_dates:
         except:
             content_text = "(본문을 불러올 수 없습니다.)"
 
-    # ✅ 날짜 텍스트 추출
     today_str = target_date.strftime("%Y년 %#m월 %#d일") if os.name == 'nt' else target_date.strftime("%Y년 %-m월 %-d일")
     lines = content_text.splitlines()
     start_idx = -1
@@ -157,19 +156,19 @@ for target_date in weekday_dates:
 
     wod_text = auto_link(wod_text, link_dict)
 
-    # ✅ 날짜별 HTML 블록 저장
+    # ✅ 들여쓰기 없이 HTML 블록 저장
     date_header = f"<h2>{target_date.strftime('%Y-%m-%d')} ({target_date.strftime('%A')})</h2>"
-    html_block = f"""
-    {date_header}
-    <img src="/static/title.png" alt="Spring Camp Title" class="header-image" />
-    <div class="content">{wod_text.replace('\n', '<br>')}</div>
-    <hr>
-    """
+    html_block = f"""\
+{date_header}
+<img src="/static/title.png" alt="Spring Camp Title" class="header-image" />
+<div class="content">{wod_text.replace('\n', '<br>')}</div>
+<hr>""".strip()
+
     all_html_blocks.append(html_block)
     print(f"✅ {target_date.strftime('%Y-%m-%d')} WOD 저장 완료")
 
-# ✅ 최종 통합 파일 저장
+# ✅ 최종 통합 저장
 with open("wod_text.txt", "w", encoding="utf-8") as f:
-    f.write("\n".join(all_html_blocks))
+    f.write("\n\n".join(all_html_blocks))
 
 print("🎉 전체 WOD가 wod_text.txt에 저장 완료되었습니다!")
