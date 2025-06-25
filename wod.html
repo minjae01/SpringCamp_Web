@@ -3,9 +3,201 @@
   <head>
     <meta charset="UTF-8" />
     <title>이번주 WOD</title>
-    <link rel="stylesheet" href="wod-style.css" />
+    <style>
+      .wod-entry {
+        display: none;
+        margin-top: 1rem;
+      }
+      .date-button {
+        margin: 0.3rem;
+        padding: 0.5rem 1rem;
+        border: 1px solid #ccc;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+      .date-button.active {
+        background-color: #333;
+        color: #fff;
+      }
+    </style>
   </head>
   <body>
-   <img src="title.png" alt="Spring Camp Title" class="header-image" />
-   <div class="content">2025년 6월 20일 금요일 WOD<br>-CrossFit-<br>Team of 2<br>80 <a href="https://www.youtube.com/watch?v=aAggnpPyR6E" target="_blank">Pull Up</a><br>60M Dumbbell Walking Lunge (22.5's/15's)<br>40 Chest to Bar <a href="https://www.youtube.com/watch?v=aAggnpPyR6E" target="_blank">Pull Up</a><br>60M Dumbbell Walking Lunge (22.5's/15's)<br>20 <a href="https://www.youtube.com/watch?v=OCg3UXgzftc" target="_blank">Bar Muscle Up</a><br>60M Dumbbell Walking Lunge (22.5's/15's)<br>A - (20/12.5) , Band Sup<br>B - (15/10) , Band Sup / 60/50/40 <a href="https://www.youtube.com/watch?v=aAggnpPyR6E" target="_blank">Pull Up</a><br>C - (10/7.5) , Band Sup / 50/40/30 <a href="https://www.youtube.com/watch?v=aAggnpPyR6E" target="_blank">Pull Up</a><br>Beginner - (7.5/5) , 40/40/40 Ring Row</div>
+    <div id="date-buttons"></div>
+    <div id="wod-container">
+      <div class="wod-entry" id="2025-06-23">
+        <h2>2025-06-23 (Monday)</h2>
+        <img
+          src="/static/title.png"
+          alt="Spring Camp Title"
+          class="header-image"
+        />
+        <div class="content">
+          2025년 6월 23일 월요일 WOD<br />-Strength-<br />Build to a heavy set
+          of 3 Back Squat (10M)<br />-CrossFit-<br />3 Sets (1 set every 6
+          minutes)<br />24/18 Calorie Machine<br />24
+          <a href="https://www.youtube.com/watch?v=EqjGKsiIMCE" target="_blank"
+            >Wall Ball Shot</a
+          >
+          (20/14)<br />12 Goblet DB Box Step Over (22.5/15)<br />A -
+          (20/12.5)<br />B - (15/10) , (14/10)<br />C - (10/7.5) , (10/6)<br />Beginner
+          - (7.5/5) , (10/6) , 18/14
+          <a href="https://www.youtube.com/watch?v=fxfhQMbATCw" target="_blank"
+            >Cal Machine</a
+          >
+        </div>
+      </div>
+      <div class="wod-entry" id="2025-06-24">
+        <h2>2025-06-24 (Tuesday)</h2>
+        <img
+          src="/static/title.png"
+          alt="Spring Camp Title"
+          class="header-image"
+        />
+        <div class="content">
+          2025년 6월 24일 화요일 WOD<br />-CrossFit-<br />Team of 2<br />80-60-40-20<br /><a
+            href="https://www.youtube.com/watch?v=_03pCKOv4l4"
+            target="_blank"
+            >Toes to Bar</a
+          ><br />40-30-20-10<br />Thruster (115/75)<br />Every 2min : 7 Syn
+          <a href="https://www.youtube.com/watch?v=D7rAEEE_H9A" target="_blank"
+            >Burpee Over the Bar</a
+          >
+          / with start<br />A - (95/65)<br />B - (75/55) , Toes Up<br />C -
+          (65/45) , Knee to Chest<br />Beginner - (-45/-35) , Knee Raise
+        </div>
+      </div>
+      <div class="wod-entry" id="2025-06-25">
+        <h2>2025-06-25 (Wednesday)</h2>
+        <img
+          src="/static/title.png"
+          alt="Spring Camp Title"
+          class="header-image"
+        />
+        <div class="content">
+          2025년 6월 25일 수요일 WOD<br />-Gymnastic-<br />Strict
+          <a href="https://www.youtube.com/watch?v=aAggnpPyR6E" target="_blank"
+            >Pull Up</a
+          ><br />10-10-10-10 @RPE 7<br />-CrossFit-<br />Team of 2<br />For time
+          of :<br />400m Run (together)<br />60 Syn Alt Hang
+          <a href="https://www.youtube.com/watch?v=-px4XoSZr1g" target="_blank"
+            >Dumbbell Snatch</a
+          >
+          (22.5/15)<br />400m Run (together)<br />20
+          <a href="https://www.youtube.com/watch?v=2TnX8j29tRY" target="_blank"
+            >Wall Walk</a
+          ><br />400m Run (together)<br />60 Syn Alt Hang
+          <a href="https://www.youtube.com/watch?v=-px4XoSZr1g" target="_blank"
+            >Dumbbell Snatch</a
+          >
+          (22.5/15)<br />400m Run (together)<br />Time Cap : 20min<br />A -
+          (20/12.5)<br />B - (15/10)<br />C - (10/7.5) , Easy
+          <a href="https://www.youtube.com/watch?v=2TnX8j29tRY" target="_blank"
+            >Wall Walk</a
+          ><br />Beginner - (7.5/5) , Inchworm Push Up
+        </div>
+      </div>
+      <div class="wod-entry" id="2025-06-26">
+        <h2>2025-06-26 (Thursday)</h2>
+        <img
+          src="/static/title.png"
+          alt="Spring Camp Title"
+          class="header-image"
+        />
+        <div class="content">
+          2025년 6월 26일 목요일 WOD<br />-Strength-<br />3 Sets<br />3 High
+          <a href="https://www.youtube.com/watch?v=0aP3tgKZcHQ" target="_blank"
+            >Hang Power Clean</a
+          >
+          @70-80%<br />-CrossFit-<br />AMRAP 15 Minute<br />5
+          <a href="https://www.youtube.com/watch?v=qCldcUyNyPE" target="_blank"
+            >Burpee Pull Up</a
+          ><br />10
+          <a href="https://www.youtube.com/watch?v=0aP3tgKZcHQ" target="_blank"
+            >Hang Power Clean</a
+          >
+          (135/95)<br />15 Push Up<br />A - (115/75)<br />B - (95/65)<br />C -
+          (65/45) ,
+          <a href="https://www.youtube.com/watch?v=auBLPXO8Fww" target="_blank"
+            >Burpee</a
+          >
+          , Wave Push Up<br />Beginner - (-45/-35) ,
+          <a href="https://www.youtube.com/watch?v=auBLPXO8Fww" target="_blank"
+            >Burpee</a
+          >
+          , Wave Push Up
+        </div>
+      </div>
+      <div class="wod-entry" id="2025-06-27">
+        <h2>2025-06-27 (Friday)</h2>
+        <img
+          src="/static/title.png"
+          alt="Spring Camp Title"
+          class="header-image"
+        />
+        <div class="content">
+          2025년 6월 27일 금요일 WOD<br />-CrossFit-<br />2Sets<br />AMRAP 3
+          Minutes<br />15M Kettlebell Front Rack Walking Lunge (16/12)<br />15/12
+          <a href="https://www.youtube.com/watch?v=fxfhQMbATCw" target="_blank"
+            >Calorie Row</a
+          ><br />Max Kettlebell Push Press (16/12)<br />-rest 3 minutes-<br />AMRAP
+          3 Minutes<br />15 Kettlebell Push Press (16/12)<br />15M Kettlebell
+          Front Rack Walking Lunge (16/12)<br />Max
+          <a href="https://www.youtube.com/watch?v=fxfhQMbATCw" target="_blank"
+            >Calorie Row</a
+          ><br />-rest 3 minutes-<br />AMRAP 3Minutes<br />15/12
+          <a href="https://www.youtube.com/watch?v=fxfhQMbATCw" target="_blank"
+            >Calorie Row</a
+          ><br />15 Kettlebell Push Press (16/12)<br />Max Kettlebell Front Rack
+          Walking Lunge (16/12)<br />-rest 3 minutes b/t set-<br />B - (12/8)<br />C
+          - DB (10/7.5) , 12/10
+          <a href="https://www.youtube.com/watch?v=fxfhQMbATCw" target="_blank"
+            >Cal Row</a
+          ><br />Beginner - DB (7.5/5) , 10/8
+          <a href="https://www.youtube.com/watch?v=fxfhQMbATCw" target="_blank"
+            >Cal Row</a
+          >
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const wodDates = [
+        '2025-06-23',
+        '2025-06-24',
+        '2025-06-25',
+        '2025-06-26',
+        '2025-06-27',
+      ];
+
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+
+      const dateButtonsContainer = document.getElementById('date-buttons');
+      const entries = document.querySelectorAll('.wod-entry');
+
+      wodDates.forEach((date) => {
+        const btn = document.createElement('button');
+        btn.className = 'date-button';
+        btn.textContent = date;
+        btn.onclick = () => {
+          entries.forEach((entry) => (entry.style.display = 'none'));
+          document
+            .querySelectorAll('.date-button')
+            .forEach((b) => b.classList.remove('active'));
+          const target = document.getElementById(date);
+          if (target) target.style.display = 'block';
+          btn.classList.add('active');
+        };
+        dateButtonsContainer.appendChild(btn);
+      });
+
+      const defaultDate = wodDates.includes(todayStr)
+        ? todayStr
+        : wodDates[wodDates.length - 1];
+      const defaultButton = document.querySelector(
+        `.date-button:nth-child(${wodDates.indexOf(defaultDate) + 1})`
+      );
+      if (defaultButton) defaultButton.click();
+    </script>
+  </body>
 </html>

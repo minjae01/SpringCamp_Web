@@ -1,3 +1,5 @@
+
+
 import time
 import os
 import datetime
@@ -7,7 +9,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
-# 유튜브 링크 딕셔너리
+# 유튜브 링크 딕셔너리 (생략하지 마세요 – 기존 link_dict 그대로 복붙)
+
 link_dict = {
     "double dumbbell front rack lunge": "https://www.youtube.com/watch?v=7EmwtpAI8cM",
     "dumbbell shoulder to overhead": "https://www.youtube.com/watch?v=AQ50ji32egc",
@@ -60,6 +63,7 @@ link_dict = {
     "squat clean": "https://www.youtube.com/watch?v=YZUdVyVV3uI",
     "burpee over the bar": "https://www.youtube.com/watch?v=D7rAEEE_H9A"
 }
+
 
 def auto_link(text: str, word_links: dict) -> str:
     sorted_words = sorted(word_links.keys(), key=lambda w: -len(w))
@@ -156,19 +160,90 @@ for target_date in weekday_dates:
 
     wod_text = auto_link(wod_text, link_dict)
 
-    # ✅ 들여쓰기 없이 HTML 블록 저장
-    date_header = f"<h2>{target_date.strftime('%Y-%m-%d')} ({target_date.strftime('%A')})</h2>"
-    html_block = f"""\
-{date_header}
-<img src="/static/title.png" alt="Spring Camp Title" class="header-image" />
-<div class="content">{wod_text.replace('\n', '<br>')}</div>
-<hr>""".strip()
+    html_block = """
+<div class="wod-entry" id="{date}">
+  <h2>{date} ({day})</h2>
+  <img src="/static/title.png" alt="Spring Camp Title" class="header-image" />
+  <div class="content">{content}</div>
+</div>
+""".format(
+        date=target_date.strftime('%Y-%m-%d'),
+        day=target_date.strftime('%A'),
+        content=wod_text.replace('\n', '<br>')
+    ).strip()
 
     all_html_blocks.append(html_block)
     print(f"✅ {target_date.strftime('%Y-%m-%d')} WOD 저장 완료")
 
-# ✅ 최종 통합 저장
-with open("wod_text.txt", "w", encoding="utf-8") as f:
-    f.write("\n\n".join(all_html_blocks))
+# 날짜 리스트 및 JS용 배열
+date_list = [d.strftime('%Y-%m-%d') for d in weekday_dates]
+date_buttons_js = ',\n        '.join(f"'{d}'" for d in date_list)
 
-print("🎉 전체 WOD가 wod_text.txt에 저장 완료되었습니다!")
+# 최종 HTML 완성
+final_html = f"""<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>이번주 WOD</title>
+    <style>
+      .wod-entry {{
+        display: none;
+        margin-top: 1rem;
+      }}
+      .date-button {{
+        margin: 0.3rem;
+        padding: 0.5rem 1rem;
+        border: 1px solid #ccc;
+        cursor: pointer;
+        border-radius: 4px;
+      }}
+      .date-button.active {{
+        background-color: #333;
+        color: #fff;
+      }}
+    </style>
+  </head>
+  <body>
+    <div id="date-buttons"></div>
+    <div id="wod-container">
+      {"".join(all_html_blocks)}
+    </div>
+
+    <script>
+      const wodDates = [
+        {date_buttons_js}
+      ];
+
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+
+      const dateButtonsContainer = document.getElementById('date-buttons');
+      const entries = document.querySelectorAll('.wod-entry');
+
+      wodDates.forEach((date) => {{
+        const btn = document.createElement('button');
+        btn.className = 'date-button';
+        btn.textContent = date;
+        btn.onclick = () => {{
+          entries.forEach((entry) => (entry.style.display = 'none'));
+          document.querySelectorAll('.date-button').forEach((b) => b.classList.remove('active'));
+          const target = document.getElementById(date);
+          if (target) target.style.display = 'block';
+          btn.classList.add('active');
+        }};
+        dateButtonsContainer.appendChild(btn);
+      }});
+
+      const defaultDate = wodDates.includes(todayStr) ? todayStr : wodDates[wodDates.length - 1];
+      const defaultButton = document.querySelector(`.date-button:nth-child(${{wodDates.indexOf(defaultDate) + 1}})`);
+      if (defaultButton) defaultButton.click();
+    </script>
+  </body>
+</html>
+"""
+
+# 저장
+with open("wod_text.txt", "w", encoding="utf-8") as f:
+    f.write(final_html)
+
+print("🎉 wod_text.txt가 요일별 선택 HTML 구조로 생성 완료되었습니다!")
