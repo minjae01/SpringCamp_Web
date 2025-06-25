@@ -20,7 +20,12 @@ body {
 .header-image {
   width: 280px;
   display: block;
-  margin: 0 auto 2rem;
+  margin: 0 auto 0.8rem; /* ↓ 간격 줄임 */
+}
+
+#date-buttons {
+  margin-bottom: 1rem;
+  margin-top: 0.2rem; /* ↑ 이미지와 버튼 사이 여백 조절 */
 }
 
 .date-button {
