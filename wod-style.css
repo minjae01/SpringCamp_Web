@@ -20,7 +20,7 @@ body {
 .header-image {
   width: 280px;
   display: block;
-  margin: 0 auto; /* 여백 완전 제거 */
+  margin: 0 auto;
 }
 
 #date-buttons {
@@ -49,27 +49,18 @@ body {
   color: #000;
 }
 
-@media (max-width: 768px) {
-  .content {
-    padding: 1.2rem;
-    font-size: 1rem;
-  }
-  .header-image {
-    width: 80%;
-  }
-  .date-button {
-    display: inline-block;
-    margin: 0.2rem 0.1rem;
-    font-size: 0.9rem;
-  }
+.wod-entry {
+  margin-top: 0; /* 버튼과 content 사이 간격 제거 */
 }
 
 .content {
   background-color: #1a1a1a;
-  padding: 2rem;
+  padding: 1rem 2rem 2rem 2rem; /* 상단 패딩 줄임 */
+  margin-top: 0.3rem; /* 버튼과 붙이기 */
   border-radius: 12px;
   max-width: 700px;
-  margin: auto;
+  margin-left: auto;
+  margin-right: auto;
   font-size: 1.1rem;
   font-family: 'CookieRun-Regular', sans-serif;
   line-height: 1.8;
@@ -83,4 +74,19 @@ a {
 
 a:hover {
   text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .content {
+    padding: 1.2rem;
+    font-size: 1rem;
+  }
+  .header-image {
+    width: 80%;
+  }
+  .date-button {
+    display: inline-block;
+    margin: 0.2rem 0.1rem;
+    font-size: 0.9rem;
+  }
 }
