@@ -25,7 +25,7 @@ body {
 
 #date-buttons {
   margin-top: 0.2rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem; /* 더 붙임 */
 }
 
 .date-button {
@@ -50,13 +50,13 @@ body {
 }
 
 .wod-entry {
-  margin-top: 0; /* 버튼과 content 사이 간격 제거 */
+  margin-top: 0;
 }
 
 .content {
   background-color: #1a1a1a;
-  padding: 1rem 2rem 2rem 2rem; /* 상단 패딩 줄임 */
-  margin-top: 0.3rem; /* 버튼과 붙이기 */
+  padding: 0.5rem 2rem 2rem 2rem; /* 위쪽 여백 최소화 */
+  margin-top: 0; /* 버튼과 딱 붙게 */
   border-radius: 12px;
   max-width: 700px;
   margin-left: auto;
