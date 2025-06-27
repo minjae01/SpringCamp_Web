@@ -9,11 +9,11 @@
 }
 
 body {
-  white-space: normal;
   margin: 0;
   background-color: #000;
   color: #fff;
   font-family: 'Noto Sans KR', sans-serif;
+  white-space: normal;
   text-align: center;
 }
 
@@ -69,15 +69,13 @@ body {
 
 .wod-entry {
   display: none;
-  margin-top: 0 !important;
 }
 
 .content {
-  padding: 0rem;
+  padding: 2rem;
   font-size: 1.1rem;
   font-family: 'CookieRun-Regular', sans-serif;
   line-height: 1.8;
-  margin-top: 0 !important;
 }
 
 a {
