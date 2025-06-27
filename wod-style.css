@@ -9,35 +9,41 @@
 }
 
 body {
+  margin: 0;
   background-color: #000;
   color: #fff;
   font-family: 'Noto Sans KR', sans-serif;
-  padding: 0;
-  margin: 0;
+  white-space: pre-line;
   text-align: center;
-}
-
-.wod-wrapper {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
 }
 
 .header-image {
   width: 280px;
   display: block;
-  margin: 0 auto 1rem;
+  margin: 2rem auto 1rem;
+}
+
+.wod-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 1rem 2rem;
 }
 
 .content-box {
   background-color: #1a1a1a;
-  padding: 1.5rem;
+  padding: 0;
   border-radius: 12px;
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+  max-width: 800px;
+  width: 100%;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
 }
 
 #date-buttons {
-  margin-bottom: 1rem;
+  padding: 1rem;
+  background-color: #1a1a1a;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
 }
 
 .date-button {
@@ -66,11 +72,10 @@ body {
 }
 
 .content {
+  padding: 2rem;
   font-size: 1.1rem;
   font-family: 'CookieRun-Regular', sans-serif;
   line-height: 1.8;
-  white-space: pre-line;
-  padding: 1rem;
 }
 
 a {
@@ -88,12 +93,13 @@ a:hover {
   }
 
   .date-button {
+    display: inline-block;
+    margin: 0.2rem 0.1rem;
     font-size: 0.9rem;
-    padding: 0.4rem 0.8rem;
   }
 
   .content {
+    padding: 1.2rem;
     font-size: 1rem;
-    padding: 1rem;
   }
 }
