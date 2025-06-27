@@ -75,7 +75,7 @@ body {
   padding: 0rem;
   font-size: 1.1rem;
   font-family: 'CookieRun-Regular', sans-serif;
-  line-height: 1.8;
+  line-height: 0;
 }
 
 a {
