@@ -12,49 +12,48 @@ body {
   background-color: #000;
   color: #fff;
   font-family: 'Noto Sans KR', sans-serif;
-  padding: 2rem;
-  white-space: pre-line;
+  padding: 0;
+  margin: 0;
   text-align: center;
+}
+
+.wod-wrapper {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
 }
 
 .header-image {
   width: 280px;
   display: block;
-  margin: 0 auto;
+  margin: 0 auto 1rem;
 }
 
-.card-wrapper {
+.content-box {
   background-color: #1a1a1a;
-  max-width: 700px;
-  margin: 0 auto;
+  padding: 1.5rem;
   border-radius: 12px;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
-  overflow: hidden; /* 테두리 일체감 유지 */
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
 }
 
 #date-buttons {
-  background-color: #1a1a1a;
-  padding: 0.8rem 0;
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  border-bottom: 1px solid #333;
+  margin-bottom: 1rem;
 }
 
 .date-button {
+  margin: 0.3rem;
   padding: 0.5rem 1rem;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  border-radius: 4px;
   background-color: #222;
   color: #fff;
-  border: none;
-  cursor: pointer;
   font-family: 'CookieRun-Regular', sans-serif;
-  font-size: 1rem;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .date-button:hover {
-  background-color: #444;
+  background-color: #333;
 }
 
 .date-button.active {
@@ -63,15 +62,15 @@ body {
 }
 
 .wod-entry {
-  margin: 0;
+  display: none;
 }
 
 .content {
-  background-color: #1a1a1a;
-  padding: 1.5rem 2rem 2rem 2rem;
   font-size: 1.1rem;
   font-family: 'CookieRun-Regular', sans-serif;
   line-height: 1.8;
+  white-space: pre-line;
+  padding: 1rem;
 }
 
 a {
@@ -88,13 +87,13 @@ a:hover {
     width: 80%;
   }
 
-  .content {
-    padding: 1.2rem;
-    font-size: 1rem;
-  }
-
   .date-button {
     font-size: 0.9rem;
     padding: 0.4rem 0.8rem;
+  }
+
+  .content {
+    font-size: 1rem;
+    padding: 1rem;
   }
 }
