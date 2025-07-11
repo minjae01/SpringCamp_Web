@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>두드리기 챌린지</title>
+    <title>두드리기 챌린지🔥</title>
     <style>
       body {
         margin: 0;
@@ -19,31 +19,47 @@
       }
 
       #game-area {
+        position: relative;
         height: 70vh;
         background-color: #222;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2.5rem;
         border: 3px dashed #444;
         margin: 20px;
         border-radius: 10px;
+        overflow: hidden;
       }
 
       #tap-image {
         width: 90%;
-        max-width: 800px;
+        max-width: 600px;
         border-radius: 15px;
         transition: opacity 0.2s;
       }
 
-      button {
-        padding: 15px 30px;
-        font-size: 1.2rem;
-        margin: 10px;
-        border: none;
+      #touch-guide {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 2rem;
+        color: rgba(255, 255, 255, 0.85);
+        background: rgba(0, 0, 0, 0.4);
+        padding: 10px 20px;
         border-radius: 10px;
-        cursor: pointer;
+        z-index: 2;
+        pointer-events: none;
+      }
+
+      button,
+      select,
+      input {
+        padding: 12px 20px;
+        font-size: 1rem;
+        margin: 5px;
+        border-radius: 10px;
+        border: none;
       }
 
       #start-btn {
@@ -51,8 +67,8 @@
         color: white;
       }
 
-      #reset-btn {
-        background-color: #f44336;
+      #delete-btn {
+        background-color: #ff5722;
         color: white;
       }
 
@@ -67,111 +83,168 @@
         margin-inline: auto;
       }
     </style>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   </head>
   <body>
-    <h1>쿨코 스내치 게임😁</h1>
+    <h1>쿨코 스내치 게임🔥</h1>
+
     <div>
-      <button id="start-btn">시작하기</button>
-      <button id="reset-btn">기록 초기화</button>
+      닉네임: <input type="text" id="nickname" placeholder="이름 입력" />
+      시간:
+      <select id="time-select">
+        <option value="5">5초</option>
+        <option value="10" selected>10초</option>
+        <option value="15">15초</option>
+      </select>
+      <button id="start-btn">게임 시작</button>
+      <button id="delete-btn">기록 전체 삭제</button>
     </div>
 
     <div id="game-area">
-      <img id="tap-image" src="image1.png" alt="이미지" />
+      <div id="touch-guide">터치하세요!</div>
+      <img id="tap-image" src="image1.png" alt="게임 이미지" />
     </div>
 
     <div id="score-board">
-      점수: <span id="score">0</span> / 남은 시간: <span id="time">10</span>s
+      점수: <span id="score">0</span> / 남은 시간: <span id="time">0</span>s
     </div>
 
-    <h2>📊 나의 기록</h2>
+    <h2>📊 전체 랭킹</h2>
     <ul id="record-list"></ul>
 
     <script>
+      // 🔧 Firebase 설정
+      const firebaseConfig = {
+        apiKey: 'AIzaSyAXH9xjHMplAFY2V4UIJD3aLa7RSva4DyY',
+        authDomain: 'minigame-3f3fe.firebaseapp.com',
+        databaseURL:
+          'https://minigame-3f3fe-default-rtdb.asia-southeast1.firebasedatabase.app',
+        projectId: 'minigame-3f3fe',
+        storageBucket: 'minigame-3f3fe.firebasestorage.app',
+        messagingSenderId: '301246638499',
+        appId: '1:301246638499:web:694751257945fca9ff5216',
+        measurementId: 'G-3YWB3FJ1NM',
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+
+      // HTML 요소
       const startBtn = document.getElementById('start-btn');
-      const resetBtn = document.getElementById('reset-btn');
-      const gameArea = document.getElementById('game-area');
+      const deleteBtn = document.getElementById('delete-btn');
+      const nicknameInput = document.getElementById('nickname');
+      const timeSelect = document.getElementById('time-select');
       const tapImage = document.getElementById('tap-image');
       const scoreDisplay = document.getElementById('score');
       const timeDisplay = document.getElementById('time');
+      const touchGuide = document.getElementById('touch-guide');
       const recordList = document.getElementById('record-list');
 
       const imgList = ['image1.png', 'image2.png', 'image3.png'];
       let currentImgIndex = 0;
-
       let score = 0;
-      let time = 10;
+      let totalTime = 10;
+      let remainingTime = 10;
       let timer;
       let playing = false;
+      let lastClickTime = 0;
 
+      // 게임 시작
       function startGame() {
-        if (playing) return;
+        const nickname = nicknameInput.value.trim();
+        if (!nickname) return alert('닉네임을 입력해주세요.');
 
+        totalTime = parseInt(timeSelect.value);
         score = 0;
-        time = 10;
+        remainingTime = totalTime;
         currentImgIndex = 0;
-        tapImage.src = imgList[currentImgIndex];
+        lastClickTime = 0;
         playing = true;
+
+        tapImage.src = imgList[currentImgIndex];
         scoreDisplay.textContent = score;
-        timeDisplay.textContent = time;
+        timeDisplay.textContent = remainingTime;
+        touchGuide.style.display = 'block';
 
         timer = setInterval(() => {
-          time--;
-          timeDisplay.textContent = time;
-          if (time <= 0) {
+          remainingTime--;
+          timeDisplay.textContent = remainingTime;
+          if (remainingTime <= 0) {
             clearInterval(timer);
             playing = false;
-            saveRecord(score);
-            alert(`게임 종료! 점수: ${score}`);
+            touchGuide.style.display = 'none';
+            saveRecordToFirebase(nickname, score);
+            alert(`게임 종료! ${nickname}님의 점수: ${score}`);
           }
         }, 1000);
       }
 
-      function saveRecord(newScore) {
-        const records = JSON.parse(localStorage.getItem('tapRecords') || '[]');
-        records.push({
-          score: newScore,
-          date: new Date().toLocaleString(),
-        });
-        records.sort((a, b) => b.score - a.score); // 높은 점수 순
-        localStorage.setItem(
-          'tapRecords',
-          JSON.stringify(records.slice(0, 10))
-        ); // 상위 10개 저장
-        displayRecords();
-      }
-
-      function displayRecords() {
-        const records = JSON.parse(localStorage.getItem('tapRecords') || '[]');
-        recordList.innerHTML = '';
-        records.forEach((r, i) => {
-          const li = document.createElement('li');
-          li.textContent = `${i + 1}위 - ${r.score}회 (${r.date})`;
-          recordList.appendChild(li);
-        });
-      }
-
+      // 치팅 방지 + 이미지 순환 + 점수 증가
       function handleTap() {
         if (!playing) return;
 
-        // 점수 증가
+        const now = Date.now();
+        if (now - lastClickTime < 100) return; // 0.1초 이내 터치 무시
+        lastClickTime = now;
+
         score++;
         scoreDisplay.textContent = score;
-
-        // 이미지 변경
         currentImgIndex = (currentImgIndex + 1) % imgList.length;
         tapImage.src = imgList[currentImgIndex];
       }
 
+      // Firebase 저장
+      function saveRecordToFirebase(name, score) {
+        const newRef = db.ref('records').push();
+        newRef.set({ name, score, timestamp: Date.now() });
+        setTimeout(loadRecordsFromFirebase, 300);
+      }
+
+      // 기록 불러오기
+      function loadRecordsFromFirebase() {
+        db.ref('records')
+          .orderByChild('score')
+          .limitToLast(10)
+          .once('value')
+          .then((snapshot) => {
+            const records = [];
+            snapshot.forEach((child) => records.push(child.val()));
+            records.sort((a, b) => b.score - a.score);
+            displayRecords(records);
+          });
+      }
+
+      function displayRecords(records) {
+        recordList.innerHTML = '';
+        records.forEach((r, i) => {
+          const date = new Date(r.timestamp).toLocaleString();
+          const li = document.createElement('li');
+          li.textContent = `${i + 1}위 - ${r.name} : ${r.score}회 (${date})`;
+          recordList.appendChild(li);
+        });
+      }
+
+      // 기록 전체 삭제
+      function deleteAllRecords() {
+        const ok = confirm('정말로 모든 기록을 삭제할까요?');
+        if (ok) {
+          db.ref('records')
+            .remove()
+            .then(() => {
+              alert('기록이 모두 삭제되었습니다.');
+              recordList.innerHTML = '';
+            });
+        }
+      }
+
+      // 이벤트
+      startBtn.addEventListener('click', startGame);
+      deleteBtn.addEventListener('click', deleteAllRecords);
       tapImage.addEventListener('click', handleTap);
       tapImage.addEventListener('touchstart', handleTap);
 
-      startBtn.addEventListener('click', startGame);
-      resetBtn.addEventListener('click', () => {
-        localStorage.removeItem('tapRecords');
-        displayRecords();
-      });
-
-      displayRecords();
+      // 초기 랭킹 로딩
+      loadRecordsFromFirebase();
     </script>
   </body>
 </html>
