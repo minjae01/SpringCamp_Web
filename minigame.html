@@ -13,9 +13,11 @@
         text-align: center;
         user-select: none;
       }
+
       h1 {
         margin-top: 20px;
       }
+
       #game-area {
         position: relative;
         height: 70vh;
@@ -28,11 +30,13 @@
         border-radius: 10px;
         overflow: hidden;
       }
+
       #tap-image {
         width: 90%;
         max-width: 600px;
         border-radius: 15px;
       }
+
       #touch-guide {
         position: absolute;
         top: 50%;
@@ -46,6 +50,7 @@
         z-index: 2;
         pointer-events: none;
       }
+
       button,
       input {
         padding: 12px 20px;
@@ -54,13 +59,16 @@
         border-radius: 10px;
         border: none;
       }
+
       #start-btn {
         background-color: #4caf50;
         color: white;
       }
+
       #score-board {
         margin-top: 20px;
       }
+
       #record-list {
         margin-top: 20px;
         text-align: left;
@@ -94,7 +102,7 @@
     <ul id="record-list"></ul>
 
     <script>
-      // ✅ Firebase 설정
+      // 🔧 Firebase 설정
       const firebaseConfig = {
         apiKey: 'AIzaSyAXH9xjHMplAFY2V4UIJD3aLa7RSva4DyY',
         authDomain: 'minigame-3f3fe.firebaseapp.com',
@@ -171,8 +179,8 @@
         newRef
           .set({ name, score, timestamp: Date.now() })
           .then(() => {
-            console.log('✅ 저장 완료');
-            loadRecordsFromFirebase(); // 저장 후 랭킹 다시 로드
+            console.log('✅ 기록 저장 완료');
+            loadRecordsFromFirebase(); // 저장 후 랭킹 갱신
           })
           .catch((err) => {
             console.error('❌ 저장 실패:', err);
@@ -180,18 +188,16 @@
       }
 
       function loadRecordsFromFirebase() {
-        console.log('📥 랭킹 불러오는 중...');
         db.ref('records')
-          .orderByChild('timestamp') // ← 모든 기록 불러옴
+          .orderByChild('timestamp') // timestamp 기준 전체 가져오기
           .once('value')
           .then((snapshot) => {
-            const records = [];
-            snapshot.forEach((child) => records.push(child.val()));
-            // 점수순 내림차순 정렬 후 상위 10개만 표시
-            const topRecords = records
+            const rawData = snapshot.val();
+            const records = Object.values(rawData || {});
+            const sorted = records
               .sort((a, b) => b.score - a.score)
               .slice(0, 10);
-            displayRecords(topRecords);
+            displayRecords(sorted);
           })
           .catch((err) => {
             console.error('❌ 랭킹 로딩 실패:', err);
@@ -215,12 +221,10 @@
         });
       }
 
-      // 이벤트 바인딩
+      // 이벤트
       startBtn.addEventListener('click', startGame);
       tapImage.addEventListener('click', handleTap);
       tapImage.addEventListener('touchstart', handleTap);
-
-      // 첫 로딩 시 랭킹 표시
       document.addEventListener('DOMContentLoaded', loadRecordsFromFirebase);
     </script>
   </body>
