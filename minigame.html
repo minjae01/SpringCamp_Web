@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>두드리기 챌린지🔥</title>
+    <title>두드리기 챌린지 - 디버깅용</title>
     <style>
       body {
         margin: 0;
@@ -13,11 +13,9 @@
         text-align: center;
         user-select: none;
       }
-
       h1 {
         margin-top: 20px;
       }
-
       #game-area {
         position: relative;
         height: 70vh;
@@ -30,14 +28,11 @@
         border-radius: 10px;
         overflow: hidden;
       }
-
       #tap-image {
         width: 90%;
         max-width: 600px;
         border-radius: 15px;
-        transition: opacity 0.2s;
       }
-
       #touch-guide {
         position: absolute;
         top: 50%;
@@ -51,7 +46,6 @@
         z-index: 2;
         pointer-events: none;
       }
-
       button,
       input {
         padding: 12px 20px;
@@ -60,16 +54,13 @@
         border-radius: 10px;
         border: none;
       }
-
       #start-btn {
         background-color: #4caf50;
         color: white;
       }
-
       #score-board {
         margin-top: 20px;
       }
-
       #record-list {
         margin-top: 20px;
         text-align: left;
@@ -77,11 +68,13 @@
         margin-inline: auto;
       }
     </style>
+
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   </head>
   <body>
-    <h1>쿨코 스내치 게임🔥</h1>
+    <h1>쿨코 스내치 게임🔥 (디버깅용)</h1>
 
     <div>
       닉네임: <input type="text" id="nickname" placeholder="이름 입력" />
@@ -154,6 +147,7 @@
             clearInterval(timer);
             playing = false;
             touchGuide.style.display = 'none';
+            console.log('🔥 게임 종료. 저장 시도:', nickname, score);
             saveRecordToFirebase(nickname, score);
             alert(`게임 종료! ${nickname}님의 점수: ${score}`);
           }
@@ -163,7 +157,7 @@
       function handleTap() {
         if (!playing) return;
         const now = Date.now();
-        if (now - lastClickTime < 100) return; // 0.1초 이내 터치 무시
+        if (now - lastClickTime < 100) return;
         lastClickTime = now;
 
         score++;
@@ -175,10 +169,11 @@
       function saveRecordToFirebase(name, score) {
         const newRef = db.ref('records').push();
         newRef.set({ name, score, timestamp: Date.now() });
-        setTimeout(loadRecordsFromFirebase, 300);
+        setTimeout(loadRecordsFromFirebase, 500);
       }
 
       function loadRecordsFromFirebase() {
+        console.log('📥 Firebase에서 기록 불러오는 중...');
         db.ref('records')
           .orderByChild('score')
           .limitToLast(10)
@@ -187,12 +182,28 @@
             const records = [];
             snapshot.forEach((child) => records.push(child.val()));
             records.sort((a, b) => b.score - a.score);
+            console.log('✅ 불러온 기록:', records);
             displayRecords(records);
+          })
+          .catch((error) => {
+            console.error('❌ Firebase 로딩 오류:', error);
           });
       }
 
       function displayRecords(records) {
+        console.log('🖨 기록 표시 시작', records);
         recordList.innerHTML = '';
+        if (!recordList) {
+          console.error('❌ recordList 엘리먼트를 찾을 수 없습니다!');
+          return;
+        }
+        if (!records || records.length === 0) {
+          const li = document.createElement('li');
+          li.textContent = '기록이 없습니다.';
+          recordList.appendChild(li);
+          return;
+        }
+
         records.forEach((r, i) => {
           const date = new Date(r.timestamp).toLocaleString();
           const li = document.createElement('li');
@@ -201,11 +212,22 @@
         });
       }
 
+      // 이벤트 연결
       startBtn.addEventListener('click', startGame);
       tapImage.addEventListener('click', handleTap);
       tapImage.addEventListener('touchstart', handleTap);
 
-      loadRecordsFromFirebase();
+      // 최초 로딩 시 랭킹 불러오기
+      document.addEventListener('DOMContentLoaded', () => {
+        console.log('📦 페이지 로드 완료. 기록 불러오기 시작');
+        loadRecordsFromFirebase();
+      });
+
+      // 테스트 강제 출력 (주석 해제 시 작동)
+      // displayRecords([
+      //   { name: "테스트1", score: 99, timestamp: Date.now() },
+      //   { name: "테스트2", score: 88, timestamp: Date.now() }
+      // ]);
     </script>
   </body>
 </html>
