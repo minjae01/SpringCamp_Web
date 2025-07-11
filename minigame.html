@@ -53,7 +53,6 @@
       }
 
       button,
-      select,
       input {
         padding: 12px 20px;
         font-size: 1rem;
@@ -64,11 +63,6 @@
 
       #start-btn {
         background-color: #4caf50;
-        color: white;
-      }
-
-      #delete-btn {
-        background-color: #ff5722;
         color: white;
       }
 
@@ -91,14 +85,7 @@
 
     <div>
       닉네임: <input type="text" id="nickname" placeholder="이름 입력" />
-      시간:
-      <select id="time-select">
-        <option value="5">5초</option>
-        <option value="10" selected>10초</option>
-        <option value="15">15초</option>
-      </select>
       <button id="start-btn">게임 시작</button>
-      <button id="delete-btn">기록 전체 삭제</button>
     </div>
 
     <div id="game-area">
@@ -114,7 +101,6 @@
     <ul id="record-list"></ul>
 
     <script>
-      // 🔧 Firebase 설정
       const firebaseConfig = {
         apiKey: 'AIzaSyAXH9xjHMplAFY2V4UIJD3aLa7RSva4DyY',
         authDomain: 'minigame-3f3fe.firebaseapp.com',
@@ -129,11 +115,8 @@
       firebase.initializeApp(firebaseConfig);
       const db = firebase.database();
 
-      // HTML 요소
       const startBtn = document.getElementById('start-btn');
-      const deleteBtn = document.getElementById('delete-btn');
       const nicknameInput = document.getElementById('nickname');
-      const timeSelect = document.getElementById('time-select');
       const tapImage = document.getElementById('tap-image');
       const scoreDisplay = document.getElementById('score');
       const timeDisplay = document.getElementById('time');
@@ -149,12 +132,10 @@
       let playing = false;
       let lastClickTime = 0;
 
-      // 게임 시작
       function startGame() {
         const nickname = nicknameInput.value.trim();
         if (!nickname) return alert('닉네임을 입력해주세요.');
 
-        totalTime = parseInt(timeSelect.value);
         score = 0;
         remainingTime = totalTime;
         currentImgIndex = 0;
@@ -179,10 +160,8 @@
         }, 1000);
       }
 
-      // 치팅 방지 + 이미지 순환 + 점수 증가
       function handleTap() {
         if (!playing) return;
-
         const now = Date.now();
         if (now - lastClickTime < 100) return; // 0.1초 이내 터치 무시
         lastClickTime = now;
@@ -193,14 +172,12 @@
         tapImage.src = imgList[currentImgIndex];
       }
 
-      // Firebase 저장
       function saveRecordToFirebase(name, score) {
         const newRef = db.ref('records').push();
         newRef.set({ name, score, timestamp: Date.now() });
         setTimeout(loadRecordsFromFirebase, 300);
       }
 
-      // 기록 불러오기
       function loadRecordsFromFirebase() {
         db.ref('records')
           .orderByChild('score')
@@ -224,26 +201,10 @@
         });
       }
 
-      // 기록 전체 삭제
-      function deleteAllRecords() {
-        const ok = confirm('정말로 모든 기록을 삭제할까요?');
-        if (ok) {
-          db.ref('records')
-            .remove()
-            .then(() => {
-              alert('기록이 모두 삭제되었습니다.');
-              recordList.innerHTML = '';
-            });
-        }
-      }
-
-      // 이벤트
       startBtn.addEventListener('click', startGame);
-      deleteBtn.addEventListener('click', deleteAllRecords);
       tapImage.addEventListener('click', handleTap);
       tapImage.addEventListener('touchstart', handleTap);
 
-      // 초기 랭킹 로딩
       loadRecordsFromFirebase();
     </script>
   </body>
