@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>두드리기 챌린지</title>
+    <title>두드리기 챌린지🔥</title>
     <style>
       body {
         margin: 0;
@@ -68,6 +68,7 @@
         margin-inline: auto;
       }
     </style>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -100,7 +101,7 @@
         databaseURL:
           'https://minigame-3f3fe-default-rtdb.asia-southeast1.firebasedatabase.app',
         projectId: 'minigame-3f3fe',
-        storageBucket: 'minigame-3f3fe.firebasestorage.app',
+        storageBucket: 'minigame-3f3fe.appspot.com',
         messagingSenderId: '301246638499',
         appId: '1:301246638499:web:694751257945fca9ff5216',
       };
@@ -147,7 +148,6 @@
             clearInterval(timer);
             playing = false;
             touchGuide.style.display = 'none';
-            console.log('🔥 게임 종료. 저장 시도:', nickname, score);
             saveRecordToFirebase(nickname, score);
             alert(`게임 종료! ${nickname}님의 점수: ${score}`);
           }
@@ -171,8 +171,8 @@
         newRef
           .set({ name, score, timestamp: Date.now() })
           .then(() => {
-            console.log('✅ 저장 완료, 랭킹 불러오기 실행');
-            loadRecordsFromFirebase();
+            console.log('✅ 저장 완료');
+            loadRecordsFromFirebase(); // 저장 후 랭킹 다시 로드
           })
           .catch((err) => {
             console.error('❌ 저장 실패:', err);
@@ -182,15 +182,16 @@
       function loadRecordsFromFirebase() {
         console.log('📥 랭킹 불러오는 중...');
         db.ref('records')
-          .orderByChild('score')
-          .limitToLast(10)
+          .orderByChild('timestamp') // ← 모든 기록 불러옴
           .once('value')
           .then((snapshot) => {
             const records = [];
             snapshot.forEach((child) => records.push(child.val()));
-            records.sort((a, b) => b.score - a.score);
-            console.log('✅ 랭킹 결과:', records);
-            displayRecords(records);
+            // 점수순 내림차순 정렬 후 상위 10개만 표시
+            const topRecords = records
+              .sort((a, b) => b.score - a.score)
+              .slice(0, 10);
+            displayRecords(topRecords);
           })
           .catch((err) => {
             console.error('❌ 랭킹 로딩 실패:', err);
@@ -199,7 +200,7 @@
 
       function displayRecords(records) {
         recordList.innerHTML = '';
-        if (!records || records.length === 0) {
+        if (!records.length) {
           const li = document.createElement('li');
           li.textContent = '기록이 없습니다.';
           recordList.appendChild(li);
@@ -214,16 +215,13 @@
         });
       }
 
-      // 이벤트
+      // 이벤트 바인딩
       startBtn.addEventListener('click', startGame);
       tapImage.addEventListener('click', handleTap);
       tapImage.addEventListener('touchstart', handleTap);
 
-      // 🔥 페이지 로드시 바로 랭킹 불러오기
-      document.addEventListener('DOMContentLoaded', () => {
-        console.log('🌐 페이지 로딩됨 → 랭킹 불러오기 실행');
-        loadRecordsFromFirebase();
-      });
+      // 첫 로딩 시 랭킹 표시
+      document.addEventListener('DOMContentLoaded', loadRecordsFromFirebase);
     </script>
   </body>
 </html>
