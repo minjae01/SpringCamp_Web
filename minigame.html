@@ -138,6 +138,8 @@
         const nickname = nicknameInput.value.trim();
         if (!nickname) return alert('닉네임을 입력해주세요.');
 
+        startBtn.disabled = true; // 🔹 비활성화
+
         score = 0;
         remainingTime = totalTime;
         currentImgIndex = 0;
@@ -158,6 +160,7 @@
             touchGuide.style.display = 'none';
             saveRecordToFirebase(nickname, score);
             alert(`게임 종료! ${nickname}님의 점수: ${score}`);
+            startBtn.disabled = false; // 🔹 다시 활성화
           }
         }, 1000);
       }
