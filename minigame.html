@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>두드리기 챌린지 - 디버깅용</title>
+    <title>두드리기 챌린지</title>
     <style>
       body {
         margin: 0;
@@ -68,13 +68,12 @@
         margin-inline: auto;
       }
     </style>
-
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   </head>
   <body>
-    <h1>쿨코 스내치 게임🔥 (디버깅용)</h1>
+    <h1>쿨코 스내치 게임🔥</h1>
 
     <div>
       닉네임: <input type="text" id="nickname" placeholder="이름 입력" />
@@ -94,6 +93,7 @@
     <ul id="record-list"></ul>
 
     <script>
+      // ✅ Firebase 설정
       const firebaseConfig = {
         apiKey: 'AIzaSyAXH9xjHMplAFY2V4UIJD3aLa7RSva4DyY',
         authDomain: 'minigame-3f3fe.firebaseapp.com',
@@ -103,11 +103,11 @@
         storageBucket: 'minigame-3f3fe.firebasestorage.app',
         messagingSenderId: '301246638499',
         appId: '1:301246638499:web:694751257945fca9ff5216',
-        measurementId: 'G-3YWB3FJ1NM',
       };
       firebase.initializeApp(firebaseConfig);
       const db = firebase.database();
 
+      // HTML 요소
       const startBtn = document.getElementById('start-btn');
       const nicknameInput = document.getElementById('nickname');
       const tapImage = document.getElementById('tap-image');
@@ -168,12 +168,19 @@
 
       function saveRecordToFirebase(name, score) {
         const newRef = db.ref('records').push();
-        newRef.set({ name, score, timestamp: Date.now() });
-        setTimeout(loadRecordsFromFirebase, 500);
+        newRef
+          .set({ name, score, timestamp: Date.now() })
+          .then(() => {
+            console.log('✅ 저장 완료, 랭킹 불러오기 실행');
+            loadRecordsFromFirebase();
+          })
+          .catch((err) => {
+            console.error('❌ 저장 실패:', err);
+          });
       }
 
       function loadRecordsFromFirebase() {
-        console.log('📥 Firebase에서 기록 불러오는 중...');
+        console.log('📥 랭킹 불러오는 중...');
         db.ref('records')
           .orderByChild('score')
           .limitToLast(10)
@@ -182,21 +189,16 @@
             const records = [];
             snapshot.forEach((child) => records.push(child.val()));
             records.sort((a, b) => b.score - a.score);
-            console.log('✅ 불러온 기록:', records);
+            console.log('✅ 랭킹 결과:', records);
             displayRecords(records);
           })
-          .catch((error) => {
-            console.error('❌ Firebase 로딩 오류:', error);
+          .catch((err) => {
+            console.error('❌ 랭킹 로딩 실패:', err);
           });
       }
 
       function displayRecords(records) {
-        console.log('🖨 기록 표시 시작', records);
         recordList.innerHTML = '';
-        if (!recordList) {
-          console.error('❌ recordList 엘리먼트를 찾을 수 없습니다!');
-          return;
-        }
         if (!records || records.length === 0) {
           const li = document.createElement('li');
           li.textContent = '기록이 없습니다.';
@@ -212,22 +214,16 @@
         });
       }
 
-      // 이벤트 연결
+      // 이벤트
       startBtn.addEventListener('click', startGame);
       tapImage.addEventListener('click', handleTap);
       tapImage.addEventListener('touchstart', handleTap);
 
-      // 최초 로딩 시 랭킹 불러오기
+      // 🔥 페이지 로드시 바로 랭킹 불러오기
       document.addEventListener('DOMContentLoaded', () => {
-        console.log('📦 페이지 로드 완료. 기록 불러오기 시작');
+        console.log('🌐 페이지 로딩됨 → 랭킹 불러오기 실행');
         loadRecordsFromFirebase();
       });
-
-      // 테스트 강제 출력 (주석 해제 시 작동)
-      // displayRecords([
-      //   { name: "테스트1", score: 99, timestamp: Date.now() },
-      //   { name: "테스트2", score: 88, timestamp: Date.now() }
-      // ]);
     </script>
   </body>
 </html>
