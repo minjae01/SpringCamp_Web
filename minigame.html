@@ -78,7 +78,6 @@
         margin-inline: auto;
       }
 
-      /* 모달 스타일 */
       #ranking-modal {
         display: none;
         position: fixed;
@@ -128,14 +127,13 @@
 
     <div id="game-area">
       <div id="touch-guide">터치하세요!</div>
-      <img id="tap-image" src="setA_1.png" alt="게임 이미지" />
+      <img id="tap-image" alt="게임 이미지" />
     </div>
 
     <div id="score-board">
       점수: <span id="score">0</span> / 남은 시간: <span id="time">0</span>s
     </div>
 
-    <!-- 모달 -->
     <div id="ranking-overlay"></div>
     <div id="ranking-modal">
       <h3>🏆 TOP 5 랭킹</h3>
@@ -174,6 +172,10 @@
         B: ['setB_1.png', 'setB_2.png', 'setB_3.png'],
       };
       let imgList = imgSets[selectedSet] || imgSets.A;
+
+      document.addEventListener('DOMContentLoaded', () => {
+        tapImage.src = imgList[0];
+      });
 
       if (!nickname) {
         alert('닉네임이 지정되지 않았습니다.');
