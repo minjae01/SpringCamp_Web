@@ -29,6 +29,7 @@
         margin: 20px;
         border-radius: 10px;
         overflow: hidden;
+        transition: border-color 0.3s;
       }
 
       #tap-image {
@@ -115,6 +116,25 @@
         background: rgba(0, 0, 0, 0.6);
         z-index: 998;
       }
+
+      /* 🔥 추가된 스타일: 반짝이는 테두리 */
+      @keyframes border-glow {
+        0% {
+          border-color: #4caf50;
+        }
+        50% {
+          border-color: #fff;
+        }
+        100% {
+          border-color: #4caf50;
+        }
+      }
+
+      .glow-border {
+        animation: border-glow 1s infinite;
+        border-style: solid !important;
+        border-width: 3px;
+      }
     </style>
 
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -162,6 +182,7 @@
       const rankingModal = document.getElementById('ranking-modal');
       const rankingList = document.getElementById('ranking-list');
       const overlay = document.getElementById('ranking-overlay');
+      const gameArea = document.getElementById('game-area'); // 🔥
 
       const urlParams = new URLSearchParams(window.location.search);
       const nickname = urlParams.get('name');
@@ -194,6 +215,8 @@
         startBtn.disabled = true;
         startBtn.style.backgroundColor = '#777';
 
+        gameArea.classList.add('glow-border'); // 🔥 반짝이 테두리 추가
+
         score = 0;
         remainingTime = totalTime;
         currentImgIndex = 0;
@@ -212,6 +235,7 @@
             clearInterval(timer);
             playing = false;
             touchGuide.style.display = 'none';
+            gameArea.classList.remove('glow-border'); // 🔥 시간 끝나면 멈춤
             saveRecordToFirebase(nickname, score);
           }
         }, 1000);
