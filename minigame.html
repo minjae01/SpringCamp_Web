@@ -51,17 +51,12 @@
         pointer-events: none;
       }
 
-      button,
-      input,
-      select {
+      button {
         padding: 12px 20px;
         font-size: 1rem;
         margin: 5px;
         border-radius: 10px;
         border: none;
-      }
-
-      #start-btn {
         background-color: #4caf50;
         color: white;
       }
@@ -82,30 +77,70 @@
         max-width: 400px;
         margin-inline: auto;
       }
+
+      /* 모달 스타일 */
+      #ranking-modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #222;
+        padding: 20px 30px;
+        border-radius: 12px;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        z-index: 999;
+      }
+
+      #ranking-modal h3 {
+        margin-top: 0;
+      }
+
+      #ranking-modal ul {
+        list-style: none;
+        padding: 0;
+        text-align: left;
+      }
+
+      #ranking-modal li {
+        margin: 4px 0;
+      }
+
+      #ranking-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 998;
+      }
     </style>
+
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   </head>
   <body>
     <h1>쿨코 스내치 게임🔥</h1>
 
-    <div>
-      닉네임: <input type="text" id="nickname" placeholder="이름 입력" />
-
-      <button id="start-btn">게임 시작</button>
-    </div>
+    <button id="start-btn">게임 시작</button>
 
     <div id="game-area">
       <div id="touch-guide">터치하세요!</div>
-      <img id="tap-image" src="image1.png" alt="게임 이미지" />
+      <img id="tap-image" src="setA_1.png" alt="게임 이미지" />
     </div>
 
     <div id="score-board">
       점수: <span id="score">0</span> / 남은 시간: <span id="time">0</span>s
     </div>
 
-    <h2>📊 전체 랭킹</h2>
-    <ul id="record-list"></ul>
+    <!-- 모달 -->
+    <div id="ranking-overlay"></div>
+    <div id="ranking-modal">
+      <h3>🏆 TOP 5 랭킹</h3>
+      <ul id="ranking-list"></ul>
+    </div>
 
     <script>
       const firebaseConfig = {
@@ -122,22 +157,28 @@
       const db = firebase.database();
 
       const startBtn = document.getElementById('start-btn');
-      const nicknameInput = document.getElementById('nickname');
-      const imageSetSelect = document.getElementById('image-set');
       const tapImage = document.getElementById('tap-image');
       const scoreDisplay = document.getElementById('score');
       const timeDisplay = document.getElementById('time');
       const touchGuide = document.getElementById('touch-guide');
-      const recordList = document.getElementById('record-list');
+      const rankingModal = document.getElementById('ranking-modal');
+      const rankingList = document.getElementById('ranking-list');
+      const overlay = document.getElementById('ranking-overlay');
 
       const urlParams = new URLSearchParams(window.location.search);
+      const nickname = urlParams.get('name');
       const selectedSet = urlParams.get('set') || 'A';
 
       const imgSets = {
         A: ['setA_1.png', 'setA_2.png', 'setA_3.png'],
         B: ['setB_1.png', 'setB_2.png', 'setB_3.png'],
       };
-      const imgList = imgSets[selectedSet];
+      let imgList = imgSets[selectedSet] || imgSets.A;
+
+      if (!nickname) {
+        alert('닉네임이 지정되지 않았습니다.');
+        startBtn.disabled = true;
+      }
 
       let currentImgIndex = 0;
       let score = 0;
@@ -148,14 +189,6 @@
       let lastClickTime = 0;
 
       function startGame() {
-        const nickname = nicknameInput.value.trim();
-        if (!nickname) return alert('닉네임을 입력해주세요.');
-
-        const selectedSet = imageSetSelect.value;
-        imgList = imageSets[selectedSet];
-        if (!imgList || imgList.length === 0)
-          return alert('이미지 세트가 잘못되었습니다.');
-
         startBtn.disabled = true;
         startBtn.style.backgroundColor = '#777';
 
@@ -178,9 +211,6 @@
             playing = false;
             touchGuide.style.display = 'none';
             saveRecordToFirebase(nickname, score);
-            alert(`게임 종료! ${nickname}님의 점수: ${score}`);
-            startBtn.disabled = false;
-            startBtn.style.backgroundColor = '#4caf50';
           }
         }, 1000);
       }
@@ -199,13 +229,12 @@
 
       function saveRecordToFirebase(name, score) {
         const newRef = db.ref('records').push();
-        newRef
-          .set({ name, score, timestamp: Date.now() })
-          .then(() => loadRecordsFromFirebase())
-          .catch((err) => console.error('❌ 저장 실패:', err));
+        newRef.set({ name, score, timestamp: Date.now() }).then(() => {
+          showRankingModal();
+        });
       }
 
-      function loadRecordsFromFirebase() {
+      function showRankingModal() {
         db.ref('records')
           .orderByChild('timestamp')
           .once('value')
@@ -214,32 +243,28 @@
             const records = Object.values(rawData || {});
             const sorted = records
               .sort((a, b) => b.score - a.score)
-              .slice(0, 10);
-            displayRecords(sorted);
-          })
-          .catch((err) => console.error('❌ 랭킹 로딩 실패:', err));
-      }
+              .slice(0, 5);
 
-      function displayRecords(records) {
-        recordList.innerHTML = '';
-        if (!records.length) {
-          const li = document.createElement('li');
-          li.textContent = '기록이 없습니다.';
-          recordList.appendChild(li);
-          return;
-        }
-        records.forEach((r, i) => {
-          const date = new Date(r.timestamp).toLocaleString();
-          const li = document.createElement('li');
-          li.textContent = `${i + 1}위 - ${r.name} : ${r.score}회 (${date})`;
-          recordList.appendChild(li);
+            rankingList.innerHTML = '';
+            sorted.forEach((r, i) => {
+              const li = document.createElement('li');
+              li.textContent = `${i + 1}위 - ${r.name}: ${r.score}회`;
+              rankingList.appendChild(li);
+            });
+
+            overlay.style.display = 'block';
+            rankingModal.style.display = 'block';
+          });
+
+        overlay.addEventListener('click', () => {
+          overlay.style.display = 'none';
+          rankingModal.style.display = 'none';
         });
       }
 
       startBtn.addEventListener('click', startGame);
       tapImage.addEventListener('click', handleTap);
       tapImage.addEventListener('touchstart', handleTap);
-      document.addEventListener('DOMContentLoaded', loadRecordsFromFirebase);
     </script>
   </body>
 </html>

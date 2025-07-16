@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>닉네임 입력</title>
+    <style>
+      body {
+        background-color: #111;
+        color: #fff;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding-top: 20vh;
+      }
+      input,
+      button {
+        padding: 10px 20px;
+        font-size: 1.2rem;
+        margin: 10px;
+        border-radius: 10px;
+        border: none;
+      }
+      button {
+        background-color: #4caf50;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>닉네임을 입력해주세요</h1>
+    <input type="text" id="nickname" placeholder="닉네임" />
+    <br />
+    <button onclick="goToSelect()">다음</button>
+
+    <script>
+      function goToSelect() {
+        const nickname = document.getElementById('nickname').value.trim();
+        if (!nickname) return alert('닉네임을 입력해주세요');
+        localStorage.setItem('nickname', nickname);
+        location.href = 'character_select.html';
+      }
+    </script>
+  </body>
+</html>

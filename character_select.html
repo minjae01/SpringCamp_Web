@@ -6,55 +6,46 @@
     <title>캐릭터 선택</title>
     <style>
       body {
-        background: #111;
+        background-color: #111;
         color: #fff;
         text-align: center;
-        font-family: sans-serif;
-      }
-      h1 {
-        margin-top: 50px;
-      }
-      .characters {
-        display: flex;
-        justify-content: center;
-        margin-top: 40px;
-        gap: 40px;
+        font-family: Arial, sans-serif;
+        padding-top: 10vh;
       }
       .character {
+        display: inline-block;
+        margin: 20px;
         cursor: pointer;
-        border: 2px solid #fff;
+        border: 3px solid transparent;
         border-radius: 10px;
-        overflow: hidden;
-        width: 150px;
-        transition: transform 0.2s;
       }
       .character:hover {
-        transform: scale(1.1);
+        border-color: #4caf50;
       }
-      .character img {
-        width: 100%;
-      }
-      .label {
-        margin-top: 10px;
+      img {
+        width: 150px;
+        height: auto;
+        border-radius: 10px;
       }
     </style>
   </head>
   <body>
-    <h1>당신의 캐릭터를 선택해 주세요</h1>
-    <div class="characters">
-      <div class="character" onclick="selectCharacter('A')">
-        <img src="setA_1.png" alt="캐릭터 A" />
-        <div class="label">쿨코</div>
+    <h1>당신의 캐릭터를 선택하세요</h1>
+    <div>
+      <div class="character" onclick="selectSet('A')">
+        <img src="setA_1.png" alt="Set A" />
+        <p>세트 A</p>
       </div>
-      <div class="character" onclick="selectCharacter('B')">
-        <img src="setB_1.png" alt="캐릭터 B" />
-        <div class="label">윤코</div>
+      <div class="character" onclick="selectSet('B')">
+        <img src="setB_1.png" alt="Set B" />
+        <p>세트 B</p>
       </div>
     </div>
 
     <script>
-      function selectCharacter(set) {
-        window.location.href = `minigame.html?set=${set}`;
+      function selectSet(set) {
+        localStorage.setItem('set', set);
+        location.href = 'minigame.html?name=민재&set=A';
       }
     </script>
   </body>
