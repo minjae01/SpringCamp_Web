@@ -34,18 +34,24 @@
     <div>
       <div class="character" onclick="selectSet('A')">
         <img src="setA_1.png" alt="Set A" />
-        <p>세트 A</p>
+        <p>쿨코</p>
       </div>
       <div class="character" onclick="selectSet('B')">
         <img src="setB_1.png" alt="Set B" />
-        <p>세트 B</p>
+        <p>윤코</p>
       </div>
     </div>
 
     <script>
       function selectSet(set) {
-        localStorage.setItem('set', set);
-        location.href = 'minigame.html?name=민재&set=A';
+        const nickname = localStorage.getItem('nickname');
+        if (!nickname) {
+          alert('닉네임 정보가 없습니다. 다시 입력해주세요.');
+          location.href = 'nickname.html';
+          return;
+        }
+        const encodedName = encodeURIComponent(nickname);
+        location.href = `minigame.html?name=${encodedName}&set=${set}`;
       }
     </script>
   </body>
