@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>오늘의 타로</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: sans-serif;
+        background: #f4f4f4;
+        text-align: center;
+        overflow-x: hidden;
+      }
+
+      h1 {
+        margin-top: 30px;
+        font-size: 20px;
+      }
+
+      .carousel {
+        position: relative;
+        width: 100%;
+        height: 300px;
+        margin-top: 40px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        display: flex;
+        gap: 10px;
+        justify-content: flex-start;
+        align-items: flex-end;
+        padding: 20px;
+      }
+
+      .card {
+        flex: 0 0 auto;
+        width: 100px;
+        height: 150px;
+        border-radius: 10px;
+        transform-style: preserve-3d;
+        transition: transform 0.8s ease;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .card img {
+        width: 100%;
+        height: 100%;
+        border-radius: 10px;
+        backface-visibility: hidden;
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+
+      .card .front {
+        transform: rotateY(180deg);
+      }
+
+      .card.flipped {
+        transform: rotateY(180deg) scale(1.2);
+        z-index: 10;
+      }
+
+      .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 20;
+      }
+
+      .modal-content {
+        background: #fff;
+        padding: 20px;
+        border-radius: 12px;
+        max-width: 400px;
+        text-align: center;
+      }
+
+      .close-btn {
+        margin-top: 15px;
+        padding: 8px 16px;
+        background: #333;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>고민에 집중하며<br />한 장의 카드를 선택해 주세요 😊</h1>
+
+    <div class="carousel" id="carousel"></div>
+
+    <div class="modal" id="resultModal">
+      <div class="modal-content">
+        <h2 id="cardTitle">타로 카드</h2>
+        <img
+          id="cardImage"
+          src=""
+          alt=""
+          style="width: 100px; margin: 10px 0"
+        />
+        <p id="cardMeaning">카드 해석이 여기에 표시됩니다.</p>
+        <button class="close-btn" onclick="closeModal()">닫기</button>
+      </div>
+    </div>
+
+    <script>
+      const tarotDeck = [
+        {
+          name: 'The Fool',
+          img: 'image/0. 바보 카드.jpg',
+          meaning:
+            '오늘은 새로운 시작에 좋은 날이에요. 두려워 말고 첫 발을 내디뎌보세요.',
+        },
+        {
+          name: 'The Magician',
+          img: 'image/1. 마법사 카드.jpg',
+          meaning:
+            '당신의 능력이 빛날 순간이에요. 머릿속 아이디어를 현실로 만들어보세요.',
+        },
+        {
+          name: 'The High Priestess',
+          img: 'image/2. 여사제 카드.jpg',
+          meaning: '겉모습에 속지 마세요. 오늘은 직관을 믿는 날이에요.',
+        },
+        {
+          name: 'The Empress',
+          img: 'image/3. 여황제 카드.jpg',
+          meaning:
+            '따뜻한 마음이 풍요를 불러올 거예요. 작은 배려가 큰 기쁨이 됩니다.',
+        },
+        {
+          name: 'The Emperor',
+          img: 'image/4. 황제 카드.jpg',
+          meaning:
+            '안정과 질서가 필요한 날이에요. 명확한 태도가 도움이 됩니다.',
+        },
+        {
+          name: 'The Hierophant',
+          img: 'image/5. 교황 카드.jpg',
+          meaning:
+            '오늘은 전통적인 방법이 오히려 정답일 수 있어요. 믿고 따르세요.',
+        },
+        {
+          name: 'The Lovers',
+          img: 'image/6. 연인 카드.jpg',
+          meaning:
+            '중요한 선택 앞에 서 있군요. 마음이 이끄는 방향을 따라가 보세요.',
+        },
+        {
+          name: 'The Chariot',
+          img: 'image/7. 전차 카드.jpg',
+          meaning:
+            '주저하지 마세요. 오늘은 당신이 주인공이에요. 밀고 나가세요!',
+        },
+        {
+          name: 'Strength',
+          img: 'image/8. 힘 카드.jpg',
+          meaning:
+            '말보다 마음이 더 큰 힘을 발휘해요. 부드럽지만 단단한 태도가 필요합니다.',
+        },
+        {
+          name: 'The Hermit',
+          img: 'image/9. 은둔자 카드.jpg',
+          meaning:
+            '바쁘게만 달려왔다면, 잠시 멈추어 내면의 소리에 귀 기울여 보세요.',
+        },
+        {
+          name: 'Wheel of Fortune',
+          img: 'image/10. 운명의 수레바퀴.jpg',
+          meaning:
+            '예상치 못한 변화가 당신을 기다려요. 흐름을 믿고 맡겨보세요.',
+        },
+        {
+          name: 'Justice',
+          img: 'image/11. 정의 카드.jpg',
+          meaning:
+            '모든 일엔 이유가 있어요. 공정함을 잃지 않으면 좋은 결과로 이어질 거예요.',
+        },
+        {
+          name: 'The Hanged Man',
+          img: 'image/12. 매달린 남자 카드.jpg',
+          meaning:
+            '서두르지 말고 시선을 바꿔보세요. 지금은 멈춤이 필요한 순간이에요.',
+        },
+        {
+          name: 'Death',
+          img: 'image/13. 죽음 카드.jpg',
+          meaning:
+            '무언가를 끝내야만 새로운 것이 들어옵니다. 과감히 내려놓아 보세요.',
+        },
+        {
+          name: 'Temperance',
+          img: 'image/14. 절제 카드.jpg',
+          meaning: '지금은 조화를 이룰 때예요. 마음의 균형을 지켜보세요.',
+        },
+        {
+          name: 'The Devil',
+          img: 'image/15. 악마 카드.jpg',
+          meaning:
+            '욕심이나 습관이 발목을 잡고 있진 않나요? 자유로워질 시간이 다가오고 있어요.',
+        },
+        {
+          name: 'The Tower',
+          img: 'image/16. 타워 카드.jpg',
+          meaning:
+            '갑작스러운 변화가 찾아올 수 있어요. 하지만 이것이 더 나은 길로 가는 시작일 수 있어요.',
+        },
+        {
+          name: 'The Star',
+          img: 'image/17. 별 카드.jpg',
+          meaning:
+            '희망의 빛이 당신을 비추고 있어요. 오늘은 작은 꿈이 자라나는 날이에요.',
+        },
+        {
+          name: 'The Moon',
+          img: 'image/18. 달 카드.jpg',
+          meaning:
+            '헷갈리는 일이 있더라도 너무 걱정 마세요. 시간이 답을 줄 거예요.',
+        },
+        {
+          name: 'The Sun',
+          img: 'image/19. 태양 카드.jpg',
+          meaning:
+            '맑고 따뜻한 하루가 펼쳐질 거예요. 기쁜 소식이 들려올 수 있어요.',
+        },
+        {
+          name: 'Judgement',
+          img: 'image/20. 심판 카드.jpg',
+          meaning:
+            '스스로에게 솔직해질 시간이에요. 지나간 일은 털고 새롭게 나아가보세요.',
+        },
+        {
+          name: 'The World',
+          img: 'image/21. 세계 카드.jpg',
+          meaning:
+            '큰 여정이 마무리되고 있어요. 당신의 노력이 결실을 맺을 때입니다.',
+        },
+      ];
+
+      const carousel = document.getElementById('carousel');
+      const modal = document.getElementById('resultModal');
+      const title = document.getElementById('cardTitle');
+      const meaning = document.getElementById('cardMeaning');
+      const image = document.getElementById('cardImage');
+
+      tarotDeck.forEach((card) => {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'card';
+        cardDiv.innerHTML = `
+          <img class="back" src="image/back.jpg" alt="Back" />
+          <img class="front" src="${card.img}" alt="${card.name}" />
+        `;
+
+        cardDiv.addEventListener('click', () => {
+          document
+            .querySelectorAll('.card')
+            .forEach((c) => c.classList.remove('flipped'));
+          cardDiv.classList.add('flipped');
+
+          setTimeout(() => {
+            title.textContent = card.name;
+            meaning.textContent = card.meaning;
+            image.src = card.img;
+            modal.style.display = 'flex';
+          }, 600);
+        });
+
+        carousel.appendChild(cardDiv);
+      });
+
+      function closeModal() {
+        modal.style.display = 'none';
+        document
+          .querySelectorAll('.card')
+          .forEach((c) => c.classList.remove('flipped'));
+      }
+
+      // 🔁 끝까지 스크롤 시 처음으로 이동
+      carousel.addEventListener('scroll', () => {
+        const scrollLeft = carousel.scrollLeft;
+        const maxScrollLeft = carousel.scrollWidth - carousel.clientWidth;
+
+        if (scrollLeft >= maxScrollLeft - 10) {
+          setTimeout(() => {
+            carousel.scrollTo({ left: 0, behavior: 'smooth' });
+          }, 400);
+        }
+      });
+    </script>
+  </body>
+</html>

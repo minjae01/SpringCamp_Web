@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>사주 결과</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- ✅ html2canvas 라이브러리 추가 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Noto Sans KR', sans-serif;
+        background: linear-gradient(to right, #fefcea, #f1da36);
+        color: #333;
+      }
+
+      .container {
+        max-width: 900px;
+        margin: 40px auto;
+        background: white;
+        border-radius: 16px;
+        padding: 30px 40px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        text-align: center;
+        color: #d35400;
+        margin-bottom: 20px;
+      }
+
+      h2 {
+        border-left: 5px solid #f39c12;
+        padding-left: 12px;
+        margin-top: 40px;
+        color: #2c3e50;
+      }
+
+      p {
+        line-height: 1.8;
+        font-size: 16px;
+        margin: 12px 0;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        font-size: 15px;
+      }
+
+      th,
+      td {
+        border: 1px solid #ccc;
+        padding: 10px;
+        text-align: center;
+      }
+
+      th {
+        background: #f8e5b7;
+      }
+
+      pre {
+        background: #f6f8fa;
+        padding: 10px;
+        white-space: pre-wrap;
+        border-radius: 8px;
+      }
+
+      .section {
+        margin-bottom: 32px;
+      }
+
+      .footer {
+        text-align: center;
+        color: #999;
+        font-size: 14px;
+        margin-top: 50px;
+      }
+
+      .download-button {
+        display: block;
+        margin: 0 auto 20px;
+        padding: 10px 20px;
+        background: #f39c12;
+        color: white;
+        font-weight: bold;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔮 당신의 사주 결과</h1>
+
+      <!-- ✅ 이미지 저장 버튼 -->
+      <button class="download-button" onclick="saveAsImage()">
+        📸 이미지로 저장
+      </button>
+
+      <div class="section" id="output">
+        운세박사 민재동자로부터 결과를 불러오는 중입니다...
+      </div>
+
+      <div class="footer">ⓒ 2025 운세박사 민재동자 리포트</div>
+    </div>
+
+    <!-- ✅ marked.js for Markdown to HTML -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <script>
+      const OPENAI_API_KEY =
+        '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';
+
+      const userInput = {
+        name: '김민재',
+        birth: '2000년 5월 12일',
+        calendar: '양력',
+        gender: '남자',
+        hour: '모름',
+        today: new Date().toLocaleDateString('ko-KR'),
+      };
+
+      const prompt = `
+당신은 전통 명리학 전문가입니다. 사용자가 입력한 정보를 기반으로 아래 형식에 맞춰 '운세박사' 스타일로 오늘의 사주 운세 전체 리포트를 작성해주세요.
+
+※ 각 항목의 답변은 **최소 3줄 이상** 상세히 작성해주세요.
+※ 오행 분석은 **천간·지지를 기반으로 각 오행(목, 화, 토, 금, 수)의 개수를 명확하게 수치로 계산**한 뒤 진행해야 합니다.
+※ **수가 없으면 반드시 "수기운이 부족하다"**고 명시하고, 성격/건강/대인관계에 어떤 영향이 있는지 설명하세요.
+※ ‘균형 잡힘’ 같은 모호한 표현을 사용하지 말고, 각 오행의 강약과 비율을 구체적으로 언급하세요.
+
+사용자 입력 정보:
+- 생년월일: ${userInput.birth}
+- 양력/음력 여부: ${userInput.calendar}
+- 성별: ${userInput.gender}
+- 태어난 시간: ${userInput.hour} (※ 시간이 없으면 '삼주'로 해석)
+- 오늘 날짜: ${userInput.today}
+
+아래 분석 형식을 반드시 따르세요:
+
+### 사주 기본정보 및 구성
+
+| 구분 | 천간 | 지지 |
+|------|------|------|
+| 년주 | ... | ... |
+| 월주 | ... | ... |
+| 일주 | ... | ... |
+| 시주 | ... | ... |
+
+→ 위 표를 기준으로 사주 구성 설명  
+→ 천간과 지지를 **오행(목·화·토·금·수)** 기준으로 변환한 뒤,  
+→ 각 오행의 개수를 세어 다음처럼 정리해 주세요:
+
+- 목(木): ?개  
+- 화(火): ?개  
+- 토(土): ?개  
+- 금(金): ?개  
+- 수(水): ?개  
+
+→ 각 오행의 **비율과 부족/과다 여부**, **불균형 시 나타날 수 있는 성격, 건강, 운세 문제**를 상세히 해석해 주세요.
+
+### 팔자 기본 분석
+→ 오행의 균형, 강약, 음양 설명
+
+### 명리학적 분석
+#### 성격 특성
+→ 일간 중심 성격 분석
+#### 사업
+→ 성공운/적성/타이밍
+#### 재산
+→ 재물 흐름, 돈복, 재물운
+#### 결혼
+→ 배우자 운, 인연 시기
+#### 건강
+→ 체질적 약점, 병 조심할 시기
+
+### 향후 1년 예측
+→ 올해~내년까지 1년 흐름
+
+### 올해예측
+→ ${new Date().getFullYear()}년 전체 해석
+
+### 향후 3~5년간의 동향 및 예측
+
+### 평생 운명 예측
+
+### 일생에 닥칠 재난
+
+### 인생에서 만나게 될 복
+
+### 몸에 나쁜 음식 / 좋은 음식
+
+### 좋은 방향 (동서남북)
+
+### 좋은 색 (오행 기반)
+
+### 길한 장소 (강, 산, 바다, 평야)
+
+### 종합 의견
+`;
+
+      async function fetchGPT() {
+        const output = document.getElementById('output');
+        try {
+          const res = await fetch(
+            'https://api.openai.com/v1/chat/completions',
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${OPENAI_API_KEY}`,
+              },
+              body: JSON.stringify({
+                model: 'gpt-4o',
+                messages: [{ role: 'user', content: prompt }],
+                temperature: 0.8,
+              }),
+            }
+          );
+
+          const result = await res.json();
+          const markdown = result.choices[0].message.content;
+          output.innerHTML = marked.parse(markdown);
+        } catch (e) {
+          output.innerHTML = `<p>❌ 오류가 발생했습니다:<br>${e.message}</p>`;
+        }
+      }
+
+      // ✅ 이미지로 저장하는 함수
+      function saveAsImage() {
+        const target = document.getElementById('output');
+        html2canvas(target, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+        }).then((canvas) => {
+          const link = document.createElement('a');
+          link.download = `사주결과_${userInput.name}.png`;
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        });
+      }
+
+      fetchGPT();
+    </script>
+  </body>
+</html>
