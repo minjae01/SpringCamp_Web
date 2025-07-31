@@ -32,9 +32,9 @@
       }
       #game-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr); /* 4칸으로 변경 */
         gap: 10px;
-        max-width: 400px;
+        max-width: 500px;
         margin: 20px auto;
       }
       .hole {
@@ -112,7 +112,6 @@
         storageBucket: 'minigame2-39b09.appspot.com',
         messagingSenderId: '522682593339',
         appId: '1:522682593339:web:a286c35809204c2b6eac1e',
-        measurementId: 'G-HPCZCH7PT2',
       };
       firebase.initializeApp(firebaseConfig);
       const db = firebase.database();
@@ -131,13 +130,12 @@
 
       let score = 0;
       let time = 20;
+      let isRunning = false;
       let gameInterval;
       let moleTimers = [];
-      let isRunning = false;
 
-      // 3x3 그리드 생성
       const holes = [];
-      for (let i = 0; i < 9; i++) {
+      for (let i = 0; i < 12; i++) {
         const hole = document.createElement('div');
         hole.className = 'hole';
 
@@ -152,7 +150,7 @@
             score++;
             img.classList.remove('active');
           } else {
-            score = Math.max(0, score - 1); // 감점
+            score = Math.max(0, score - 1);
           }
           scoreEl.textContent = score;
         });
@@ -169,10 +167,9 @@
       function showMoles() {
         const count = time <= 10 ? 2 + Math.floor(Math.random() * 2) : 1;
         const targets = randomHoles(count);
-
         targets.forEach(({ img }) => {
           img.classList.add('active');
-          const timer = setTimeout(() => img.classList.remove('active'), 900);
+          const timer = setTimeout(() => img.classList.remove('active'), 500);
           moleTimers.push(timer);
         });
       }
@@ -196,7 +193,7 @@
           showMoles();
           time--;
           timeEl.textContent = time;
-        }, 1000);
+        }, 600); // 더 빠르게!
       }
 
       function saveScore() {
