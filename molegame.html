@@ -32,9 +32,9 @@
       }
       #game-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr); /* 4칸으로 변경 */
+        grid-template-columns: repeat(4, 1fr); /* 4열 */
         gap: 10px;
-        max-width: 500px;
+        max-width: 600px;
         margin: 20px auto;
       }
       .hole {
@@ -135,7 +135,7 @@
       let moleTimers = [];
 
       const holes = [];
-      for (let i = 0; i < 12; i++) {
+      for (let i = 0; i < 16; i++) {
         const hole = document.createElement('div');
         hole.className = 'hole';
 
@@ -193,7 +193,7 @@
           showMoles();
           time--;
           timeEl.textContent = time;
-        }, 600); // 더 빠르게!
+        }, 600);
       }
 
       function saveScore() {
