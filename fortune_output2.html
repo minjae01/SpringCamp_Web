@@ -1,0 +1,100 @@
+<!-- daily-unse.html -->
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>오늘의 운세</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+      body {
+        font-family: 'Noto Sans KR', sans-serif;
+        background: linear-gradient(to right, #fefcea, #f1da36);
+        padding: 20px;
+        margin: 0;
+      }
+      .container {
+        max-width: 800px;
+        margin: auto;
+        background: white;
+        border-radius: 16px;
+        padding: 30px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        text-align: center;
+        color: #d35400;
+      }
+      .download-button {
+        display: block;
+        margin: 10px auto 20px;
+        padding: 10px 20px;
+        background: #e67e22;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      .footer {
+        text-align: center;
+        margin-top: 30px;
+        color: #999;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔮 오늘의 운세 리포트</h1>
+      <button class="download-button" onclick="saveAsImage()">
+        📸 이미지로 저장
+      </button>
+      <div id="output">운세를 불러오는 중입니다...</div>
+      <div class="footer">ⓒ 2025 운세박사 민재동자</div>
+    </div>
+
+    <script>
+      const userInput = {
+        name: '김민재',
+        birth: '2000년 5월 12일',
+        calendar: '양력',
+        gender: '남자',
+        hour: '모름',
+        today: new Date().toLocaleDateString('ko-KR'),
+      };
+
+      async function fetchUnse() {
+        const output = document.getElementById('output');
+        try {
+          const res = await fetch('http://localhost:5000/api/daily-unse', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userInput),
+          });
+          const data = await res.json();
+          output.innerHTML = marked.parse(data.result);
+        } catch (e) {
+          output.innerHTML = `<p>❌ 오류 발생: ${e.message}</p>`;
+        }
+      }
+
+      function saveAsImage() {
+        html2canvas(document.getElementById('output'), { scale: 2 }).then(
+          (canvas) => {
+            const link = document.createElement('a');
+            link.download = `오늘의_운세_${userInput.name}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+          }
+        );
+      }
+
+      fetchUnse();
+    </script>
+  </body>
+</html>

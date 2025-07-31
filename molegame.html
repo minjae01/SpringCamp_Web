@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>두더지 잡기 게임</title>
+    <style>
+      body {
+        background: #111;
+        color: #fff;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin: 0;
+        padding: 20px;
+      }
+      h1 {
+        margin-bottom: 10px;
+      }
+      #start-btn {
+        padding: 12px 20px;
+        font-size: 1rem;
+        margin: 10px;
+        border-radius: 10px;
+        border: none;
+        background-color: #4caf50;
+        color: white;
+        cursor: pointer;
+      }
+      #start-btn:disabled {
+        background-color: #777 !important;
+        cursor: not-allowed;
+      }
+      #game-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        max-width: 400px;
+        margin: 20px auto;
+      }
+      .hole {
+        width: 100%;
+        aspect-ratio: 1;
+        background: #333;
+        border-radius: 12px;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+      }
+      .mole {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: none;
+      }
+      .mole.active {
+        display: block;
+      }
+      #score-board {
+        margin-top: 20px;
+        font-size: 1.2rem;
+      }
+      #ranking-modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #222;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        z-index: 10;
+      }
+      #ranking-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 9;
+      }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  </head>
+  <body>
+    <h1>두더지 잡기 🪓</h1>
+
+    <button id="start-btn">게임 시작</button>
+
+    <div id="score-board">
+      점수: <span id="score">0</span> / 남은 시간: <span id="time">20</span>s
+    </div>
+
+    <div id="game-grid"></div>
+
+    <div id="ranking-overlay"></div>
+    <div id="ranking-modal">
+      <h3>🏆 TOP 5 랭킹</h3>
+      <ul id="ranking-list"></ul>
+    </div>
+
+    <script>
+      const firebaseConfig = {
+        apiKey: 'AIzaSyCv-IaqoV7wAnc2vxfG1nuKLy0GWRHjnFc',
+        authDomain: 'minigame2-39b09.firebaseapp.com',
+        databaseURL:
+          'https://minigame2-39b09-default-rtdb.asia-southeast1.firebasedatabase.app',
+        projectId: 'minigame2-39b09',
+        storageBucket: 'minigame2-39b09.appspot.com',
+        messagingSenderId: '522682593339',
+        appId: '1:522682593339:web:a286c35809204c2b6eac1e',
+        measurementId: 'G-HPCZCH7PT2',
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+
+      const grid = document.getElementById('game-grid');
+      const scoreEl = document.getElementById('score');
+      const timeEl = document.getElementById('time');
+      const modal = document.getElementById('ranking-modal');
+      const overlay = document.getElementById('ranking-overlay');
+      const rankingList = document.getElementById('ranking-list');
+      const startBtn = document.getElementById('start-btn');
+
+      const nickname = localStorage.getItem('nickname') || '익명';
+      const set = localStorage.getItem('set') || 'A';
+      const moleImage = set === 'B' ? 'mole_yoon.png' : 'mole_co.png';
+
+      let score = 0;
+      let time = 20;
+      let gameInterval;
+      let moleTimers = [];
+      let isRunning = false;
+
+      // 3x3 그리드 생성
+      const holes = [];
+      for (let i = 0; i < 9; i++) {
+        const hole = document.createElement('div');
+        hole.className = 'hole';
+
+        const img = document.createElement('img');
+        img.src = moleImage;
+        img.className = 'mole';
+        hole.appendChild(img);
+
+        hole.addEventListener('click', () => {
+          if (!isRunning) return;
+          if (img.classList.contains('active')) {
+            score++;
+            img.classList.remove('active');
+          } else {
+            score = Math.max(0, score - 1); // 감점
+          }
+          scoreEl.textContent = score;
+        });
+
+        grid.appendChild(hole);
+        holes.push({ hole, img });
+      }
+
+      function randomHoles(count) {
+        const shuffled = holes.sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, count);
+      }
+
+      function showMoles() {
+        const count = time <= 10 ? 2 + Math.floor(Math.random() * 2) : 1;
+        const targets = randomHoles(count);
+
+        targets.forEach(({ img }) => {
+          img.classList.add('active');
+          const timer = setTimeout(() => img.classList.remove('active'), 900);
+          moleTimers.push(timer);
+        });
+      }
+
+      function startGame() {
+        score = 0;
+        time = 20;
+        isRunning = true;
+        scoreEl.textContent = score;
+        timeEl.textContent = time;
+        startBtn.disabled = true;
+
+        gameInterval = setInterval(() => {
+          if (time <= 0) {
+            clearInterval(gameInterval);
+            moleTimers.forEach(clearTimeout);
+            isRunning = false;
+            saveScore();
+            return;
+          }
+          showMoles();
+          time--;
+          timeEl.textContent = time;
+        }, 1000);
+      }
+
+      function saveScore() {
+        const newRef = db.ref('records').push();
+        newRef
+          .set({ name: nickname, score, timestamp: Date.now() })
+          .then(() => {
+            showRanking();
+          });
+      }
+
+      function showRanking() {
+        db.ref('records')
+          .orderByChild('timestamp')
+          .once('value')
+          .then((snap) => {
+            const data = Object.values(snap.val() || {});
+            const sorted = data.sort((a, b) => b.score - a.score).slice(0, 5);
+            rankingList.innerHTML = '';
+            sorted.forEach((r, i) => {
+              const li = document.createElement('li');
+              li.textContent = `${i + 1}위 - ${r.name}: ${r.score}점`;
+              rankingList.appendChild(li);
+            });
+            modal.style.display = 'block';
+            overlay.style.display = 'block';
+          });
+
+        overlay.onclick = () => {
+          modal.style.display = 'none';
+          overlay.style.display = 'none';
+        };
+      }
+
+      startBtn.addEventListener('click', startGame);
+    </script>
+  </body>
+</html>

@@ -141,7 +141,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   </head>
   <body>
-    <h1>쿨코 스내치 게임🔥</h1>
+    <h1>스내치 게임🔥</h1>
 
     <button id="start-btn">게임 시작</button>
 
@@ -185,6 +185,7 @@
       const gameArea = document.getElementById('game-area'); // 🔥
 
       const urlParams = new URLSearchParams(window.location.search);
+      const select_game = urlParams.get('game');
       const nickname = urlParams.get('name');
       const selectedSet = urlParams.get('set') || 'A';
 

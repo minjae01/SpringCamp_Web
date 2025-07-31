@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>게임 선택</title>
+    <style>
+      body {
+        background-color: #111;
+        color: white;
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding-top: 15vh;
+      }
+      h1 {
+        font-size: 2rem;
+        margin-bottom: 40px;
+      }
+      .game-button {
+        display: block;
+        width: 260px;
+        margin: 20px auto;
+        padding: 16px;
+        font-size: 1.2rem;
+        border-radius: 12px;
+        border: none;
+        background-color: #4caf50;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+      .game-button:hover {
+        background-color: #45a049;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>어떤 게임을 플레이할까요?</h1>
+
+    <button class="game-button" onclick="chooseGame('minigame')">
+      🏋️ 스내치 게임
+    </button>
+    <button class="game-button" onclick="chooseGame('molegame')">
+      🐧 두더지 잡기 게임
+    </button>
+
+    <script>
+      function chooseGame(gameName) {
+        localStorage.setItem('selectedGame', gameName);
+        location.href = 'name.html'; // 닉네임 입력 페이지로 이동
+      }
+    </script>
+  </body>
+</html>

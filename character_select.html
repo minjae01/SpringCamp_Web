@@ -45,13 +45,17 @@
     <script>
       function selectSet(set) {
         const nickname = localStorage.getItem('nickname');
-        if (!nickname) {
-          alert('닉네임 정보가 없습니다. 다시 입력해주세요.');
-          location.href = 'nickname.html';
+        const game = localStorage.getItem('selectedGame');
+        if (!nickname || !game) {
+          alert('게임 또는 닉네임 정보가 없습니다. 다시 시작해주세요.');
+          location.href = 'game_select.html';
           return;
         }
+
         const encodedName = encodeURIComponent(nickname);
-        location.href = `minigame.html?name=${encodedName}&set=${set}`;
+        const targetPage =
+          game === 'molegame' ? 'molegame.html' : 'minigame.html';
+        location.href = `${targetPage}?name=${encodedName}&set=${set}`;
       }
     </script>
   </body>

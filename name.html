@@ -30,13 +30,19 @@
     <h1>닉네임을 입력해주세요</h1>
     <input type="text" id="nickname" placeholder="닉네임" />
     <br />
-    <button onclick="goToSelect()">다음</button>
+    <button onclick="goToNext()">다음</button>
 
     <script>
-      function goToSelect() {
+      function goToNext() {
         const nickname = document.getElementById('nickname').value.trim();
         if (!nickname) return alert('닉네임을 입력해주세요');
+
+        const selectedGame = localStorage.getItem('selectedGame');
+        if (!selectedGame) return alert('게임이 선택되지 않았습니다.');
+
         localStorage.setItem('nickname', nickname);
+
+        // 캐릭터 선택 페이지로 이동
         location.href = 'character_select.html';
       }
     </script>
