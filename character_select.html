@@ -52,6 +52,8 @@
           return;
         }
 
+        localStorage.setItem('set', set); // ✅ 추가된 줄
+
         const encodedName = encodeURIComponent(nickname);
         const targetPage =
           game === 'molegame' ? 'molegame.html' : 'minigame.html';
