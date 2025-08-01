@@ -149,9 +149,10 @@
           if (img.classList.contains('active')) {
             score++;
             img.classList.remove('active');
-          } else {
-            score = Math.max(0, score - 1);
           }
+          // else {
+          //   score = Math.max(0, score - 1);
+          // }
           scoreEl.textContent = score;
         });
 
