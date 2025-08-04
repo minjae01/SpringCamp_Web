@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Suika-style 수박게임 🍉</title>
+    <style>
+      body {
+        margin: 0;
+        background: #222;
+        color: #fff;
+        font-family: sans-serif;
+        text-align: center;
+      }
+      canvas {
+        background: #333;
+        display: block;
+        margin: 20px auto;
+        border: 4px solid #4caf50;
+        border-radius: 16px;
+      }
+      #score {
+        font-size: 1.4rem;
+        margin: 10px;
+      }
+      #reset {
+        padding: 8px 16px;
+        border: none;
+        background: #4caf50;
+        color: #fff;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      #gameOver {
+        color: tomato;
+        font-size: 1.4rem;
+        margin-top: 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>수박 게임 🍉</h1>
+    <div id="score">점수: 0</div>
+    <canvas id="game" width="360" height="640"></canvas>
+    <br />
+    <button id="reset">다시하기</button>
+    <div id="gameOver" style="display: none">GAME OVER</div>
+    <script>
+      const fruitData = [
+        { name: 'cherry', radius: 18, score: 10 },
+        { name: 'grape', radius: 24, score: 20 },
+        { name: 'korean melon', radius: 49, score: 40 },
+        { name: 'strawberry', radius: 65, score: 80 },
+        { name: 'grape fruit', radius: 71, score: 160 },
+        { name: 'watermelon', radius: 90, score: 320 },
+      ];
+
+      const charSet = localStorage.getItem('set') === 'B' ? 'yoon' : 'co';
+      const fruitImages = {};
+      let loaded = 0;
+      fruitData.forEach((f) => {
+        let img = new Image();
+        img.src = `${f.name}_${charSet}.png`;
+        img.onload = () => {
+          loaded++;
+          if (loaded === fruitData.length) startGame();
+        };
+        fruitImages[f.name] = img;
+      });
+
+      const canvas = document.getElementById('game');
+      const ctx = canvas.getContext('2d');
+      const scoreDiv = document.getElementById('score');
+      const resetBtn = document.getElementById('reset');
+      const gameOverDiv = document.getElementById('gameOver');
+      const dangerLine = canvas.height / 3;
+
+      let fruits = [];
+      let fallingFruit = null;
+      let gameOver = false;
+      let score = 0;
+
+      function startGame() {
+        fruits = [];
+        score = 0;
+        gameOver = false;
+        fallingFruit = null;
+        scoreDiv.textContent = `점수: ${score}`;
+        gameOverDiv.style.display = 'none';
+        spawnNext();
+        requestAnimationFrame(loop);
+      }
+
+      function createFruit(level, x, y) {
+        const d = fruitData[level];
+        return {
+          x,
+          y,
+          vx: 0,
+          vy: 0,
+          radius: d.radius,
+          level,
+          alive: true,
+          settled: false,
+        };
+      }
+
+      function clampPosition(fruit) {
+        fruit.x = Math.max(
+          fruit.radius,
+          Math.min(canvas.width - fruit.radius, fruit.x)
+        );
+        fruit.y = Math.max(
+          fruit.radius,
+          Math.min(canvas.height - fruit.radius, fruit.y)
+        );
+        if (fruit.settled && fruit.y + fruit.radius > canvas.height) {
+          fruit.y = canvas.height - fruit.radius;
+        }
+      }
+
+      canvas.addEventListener('mousemove', (e) => {
+        if (!fallingFruit || gameOver) return;
+        const rect = canvas.getBoundingClientRect();
+        let x = e.clientX - rect.left;
+        const rad = fallingFruit.radius;
+        x = Math.max(rad, Math.min(canvas.width - rad, x));
+        fallingFruit.x = x;
+      });
+
+      canvas.addEventListener('click', () => {
+        if (fallingFruit && !gameOver) {
+          fruits.push({ ...fallingFruit });
+          fallingFruit = null;
+          spawnNext();
+        }
+      });
+
+      function spawnNext() {
+        if (gameOver) return;
+        const lvl = Math.floor(Math.random() * 2);
+        fallingFruit = createFruit(lvl, canvas.width / 2, 40);
+      }
+
+      function checkSettled(fruit, others) {
+        if (Math.abs(fruit.vy) > 0.5) return false;
+        if (Math.abs(fruit.y + fruit.radius - canvas.height) < 2) return true;
+        for (let o of others) {
+          if (!o.settled || !o.alive) continue;
+          const dx = fruit.x - o.x;
+          if (
+            Math.abs(dx) < o.radius * 0.8 &&
+            fruit.y < o.y &&
+            Math.abs(fruit.y + fruit.radius - (o.y - o.radius)) < 3
+          ) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      function isTouchingOthers(fruit, others) {
+        return others.some(
+          (o) =>
+            o !== fruit &&
+            o.alive &&
+            Math.hypot(fruit.x - o.x, fruit.y - o.y) <
+              fruit.radius + o.radius - 1
+        );
+      }
+
+      function physics() {
+        const g = 0.35;
+        for (let i = 0; i < fruits.length; i++) {
+          let f = fruits[i];
+          if (!f.alive) continue;
+          if (!f.settled) {
+            f.vy += g;
+            f.x += f.vx;
+            f.y += f.vy;
+            if (f.x - f.radius < 0) {
+              f.x = f.radius;
+              f.vx = 0;
+            }
+            if (f.x + f.radius > canvas.width) {
+              f.x = canvas.width - f.radius;
+              f.vx = 0;
+            }
+            if (
+              checkSettled(
+                f,
+                fruits.filter((ff) => ff !== f)
+              )
+            ) {
+              f.vy = 0;
+              f.vx = 0;
+              f.settled = true;
+              clampPosition(f);
+            }
+            if (f.y + f.radius > canvas.height) {
+              f.y = canvas.height - f.radius;
+              f.vy = 0;
+              f.vx = 0;
+              f.settled = true;
+            }
+            if (Math.abs(f.vx) < 0.02) f.vx = 0;
+            if (Math.abs(f.vy) < 0.02) f.vy = 0;
+          }
+          if (f.settled && f.y + f.radius > canvas.height) {
+            f.y = canvas.height - f.radius;
+          }
+        }
+
+        let merged = false;
+        for (let i = 0; i < fruits.length; i++) {
+          let f = fruits[i];
+          if (!f.alive) continue;
+          for (let j = i + 1; j < fruits.length; j++) {
+            let o = fruits[j];
+            if (!o.alive) continue;
+            const dx = o.x - f.x,
+              dy = o.y - f.y;
+            const dist = Math.hypot(dx, dy);
+            const minDist = f.radius + o.radius;
+            if (dist < minDist - 0.5) {
+              const angle = Math.atan2(dy, dx);
+              const overlap = (minDist - dist) / 2;
+              f.x -= Math.cos(angle) * overlap;
+              f.y -= Math.sin(angle) * overlap;
+              o.x += Math.cos(angle) * overlap;
+              o.y += Math.sin(angle) * overlap;
+              f.vx = o.vx = 0;
+              f.vy = o.vy = 0;
+              f.settled = o.settled = false;
+              if (f.level === o.level && f.level < fruitData.length - 1) {
+                let mx = (f.x + o.x) / 2,
+                  my = (f.y + o.y) / 2;
+                let newFruit = createFruit(f.level + 1, mx, my);
+                clampPosition(newFruit);
+                fruits.push(newFruit);
+                score += fruitData[f.level + 1].score;
+                scoreDiv.textContent = `점수: ${score}`;
+                f.alive = false;
+                o.alive = false;
+                merged = true;
+                break;
+              }
+            }
+          }
+          if (merged) break;
+        }
+        if (merged) fruits = fruits.filter((f) => f.alive);
+      }
+
+      function drawFruit(f) {
+        const img = fruitImages[fruitData[f.level].name];
+        if (img.complete) {
+          ctx.drawImage(
+            img,
+            f.x - f.radius,
+            f.y - f.radius,
+            f.radius * 2,
+            f.radius * 2
+          );
+        } else {
+          ctx.beginPath();
+          ctx.arc(f.x, f.y, f.radius, 0, 2 * Math.PI);
+          ctx.fillStyle = '#ff0';
+          ctx.fill();
+        }
+      }
+
+      function loop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        ctx.save();
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, dangerLine);
+        ctx.lineTo(canvas.width, dangerLine);
+        ctx.stroke();
+        ctx.restore();
+
+        if (fallingFruit) {
+          ctx.globalAlpha = 0.7;
+          drawFruit(fallingFruit);
+          ctx.globalAlpha = 1.0;
+        }
+        fruits.forEach((f) => drawFruit(f));
+
+        if (!gameOver) {
+          physics();
+          // settled이거나 다른 과일과 접촉하면 dangerLine 위에서 게임오버
+          if (
+            fruits.some(
+              (f, i, arr) =>
+                (f.settled || isTouchingOthers(f, arr)) &&
+                f.y - f.radius < dangerLine + 0.5
+            )
+          ) {
+            gameOver = true;
+            gameOverDiv.style.display = '';
+          } else {
+            requestAnimationFrame(loop);
+          }
+        }
+      }
+
+      resetBtn.addEventListener('click', startGame);
+    </script>
+  </body>
+</html>
