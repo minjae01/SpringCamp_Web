@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Suika-style 수박게임 🍉</title>
+    <title>수박 게임 🍉</title>
     <style>
       body {
         margin: 0;
         background: #222;
         color: #fff;
-        font-family: sans-serif;
+        font-family: Arial, sans-serif;
         text-align: center;
       }
       canvas {
@@ -23,36 +23,99 @@
         font-size: 1.4rem;
         margin: 10px;
       }
-      #reset {
-        padding: 8px 16px;
-        border: none;
-        background: #4caf50;
-        color: #fff;
-        border-radius: 8px;
-        cursor: pointer;
-      }
       #gameOver {
         color: tomato;
         font-size: 1.4rem;
         margin-top: 15px;
+        display: none;
+      }
+      #ranking-modal {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #222;
+        padding: 20px 30px;
+        border-radius: 12px;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        z-index: 999;
+      }
+      #ranking-modal h3 {
+        margin-top: 0;
+      }
+      #ranking-modal ul {
+        list-style: none;
+        padding: 0;
+        text-align: left;
+      }
+      #ranking-modal li {
+        margin: 4px 0;
+      }
+      #ranking-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 998;
       }
     </style>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   </head>
   <body>
     <h1>수박 게임 🍉</h1>
     <div id="score">점수: 0</div>
     <canvas id="game" width="360" height="640"></canvas>
-    <br />
-    <button id="reset">다시하기</button>
-    <div id="gameOver" style="display: none">GAME OVER</div>
+    <div id="gameOver">GAME OVER</div>
+    <!-- 랭킹 모달 -->
+    <div id="ranking-overlay"></div>
+    <div id="ranking-modal">
+      <h3>🏆 TOP 5 랭킹</h3>
+      <ul id="ranking-list"></ul>
+      <div style="text-align: center; margin-top: 16px">
+        <button
+          id="modal-close"
+          style="
+            padding: 8px 24px;
+            border: none;
+            border-radius: 8px;
+            background: #4caf50;
+            color: #fff;
+            font-size: 1.1rem;
+            cursor: pointer;
+          "
+        >
+          계속하기
+        </button>
+      </div>
+    </div>
     <script>
+      const firebaseConfig = {
+        apiKey: 'AIzaSyAhkw341lTuMueuSP5JwycuUUwdpbOvPpc',
+        authDomain: 'suikagame-2dc1e.firebaseapp.com',
+        databaseURL:
+          'https://suikagame-2dc1e-default-rtdb.asia-southeast1.firebasedatabase.app',
+        projectId: 'suikagame-2dc1e',
+        storageBucket: 'suikagame-2dc1e.firebasestorage.app',
+        messagingSenderId: '96745545055',
+        appId: '1:96745545055:web:9f5a8ad4bad5cf1240aaea',
+        measurementId: 'G-3PQE9DEXGX',
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+
+      // === 게임 코드 ===
       const fruitData = [
-        { name: 'cherry', radius: 18, score: 10 },
-        { name: 'grape', radius: 24, score: 20 },
-        { name: 'korean melon', radius: 49, score: 40 },
-        { name: 'strawberry', radius: 65, score: 80 },
-        { name: 'grape fruit', radius: 71, score: 160 },
-        { name: 'watermelon', radius: 90, score: 320 },
+        { name: 'cherry', radius: 20, score: 10 },
+        { name: 'grape', radius: 44, score: 20 },
+        { name: 'korean melon', radius: 69, score: 40 },
+        { name: 'strawberry', radius: 85, score: 80 },
+        { name: 'grape fruit', radius: 91, score: 160 },
+        { name: 'watermelon', radius: 130, score: 320 },
       ];
 
       const charSet = localStorage.getItem('set') === 'B' ? 'yoon' : 'co';
@@ -71,9 +134,17 @@
       const canvas = document.getElementById('game');
       const ctx = canvas.getContext('2d');
       const scoreDiv = document.getElementById('score');
-      const resetBtn = document.getElementById('reset');
       const gameOverDiv = document.getElementById('gameOver');
       const dangerLine = canvas.height / 3;
+
+      // 랭킹 관련 DOM
+      const rankingModal = document.getElementById('ranking-modal');
+      const rankingOverlay = document.getElementById('ranking-overlay');
+      const rankingList = document.getElementById('ranking-list');
+      const modalCloseBtn = document.getElementById('modal-close');
+
+      // 닉네임 가져오기 (없으면 '익명')
+      const nickname = localStorage.getItem('nickname') || '익명';
 
       let fruits = [];
       let fallingFruit = null;
@@ -87,6 +158,8 @@
         fallingFruit = null;
         scoreDiv.textContent = `점수: ${score}`;
         gameOverDiv.style.display = 'none';
+        rankingModal.style.display = 'none';
+        rankingOverlay.style.display = 'none';
         spawnNext();
         requestAnimationFrame(loop);
       }
@@ -301,13 +374,55 @@
           ) {
             gameOver = true;
             gameOverDiv.style.display = '';
+            saveScoreToFirebase(score); // 항상 호출
           } else {
             requestAnimationFrame(loop);
           }
         }
       }
 
-      resetBtn.addEventListener('click', startGame);
+      function saveScoreToFirebase(score) {
+        // 점수 저장 후 랭킹 보여주기
+        const newRef = db.ref('records').push();
+        newRef
+          .set({ name: nickname, score, timestamp: Date.now() })
+          .then(() => {
+            showRankingModal();
+          });
+      }
+
+      function showRankingModal() {
+        // 최신 100개 중 상위 5개만 보여주기 (안전하게)
+        db.ref('records')
+          .orderByChild('score')
+          .limitToLast(100)
+          .once('value')
+          .then((snapshot) => {
+            const data = Object.values(snapshot.val() || {});
+            const sorted = data.sort((a, b) => b.score - a.score).slice(0, 5);
+            rankingList.innerHTML = '';
+            if (sorted.length === 0) {
+              rankingList.innerHTML = '<li>랭킹 기록 없음</li>';
+            } else {
+              sorted.forEach((r, i) => {
+                const li = document.createElement('li');
+                li.textContent = `${i + 1}위 - ${r.name}: ${r.score}점`;
+                rankingList.appendChild(li);
+              });
+            }
+            rankingModal.style.display = 'block';
+            rankingOverlay.style.display = 'block';
+          });
+      }
+
+      rankingOverlay.onclick = closeModal;
+      modalCloseBtn.onclick = closeModal;
+
+      function closeModal() {
+        rankingModal.style.display = 'none';
+        rankingOverlay.style.display = 'none';
+        startGame(); // 자동 재시작
+      }
     </script>
   </body>
 </html>

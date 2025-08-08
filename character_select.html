@@ -56,7 +56,11 @@
 
         const encodedName = encodeURIComponent(nickname);
         const targetPage =
-          game === 'molegame' ? 'molegame.html' : 'minigame.html';
+          game === 'molegame'
+            ? 'molegame.html'
+            : game === 'suikagame'
+            ? 'suikagame.html'
+            : 'minigame.html';
         location.href = `${targetPage}?name=${encodedName}&set=${set}`;
       }
     </script>
