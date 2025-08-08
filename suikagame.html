@@ -2,7 +2,6 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <!-- 모바일 확대 방지 & 반응형 -->
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
@@ -45,7 +44,7 @@
         display: block;
         margin: 10px auto 16px;
         width: min(92vw, var(--max-canvas-w));
-        aspect-ratio: 9 / 16;
+        aspect-ratio: 9/16;
         background: #333;
         border: 4px solid #4caf50;
         border-radius: 16px;
@@ -59,8 +58,6 @@
         margin-top: 6px;
         display: none;
       }
-
-      /* 랭킹 모달 */
       #ranking-overlay {
         display: none;
         position: fixed;
@@ -117,21 +114,15 @@
       }
     </style>
 
-    <!-- Firebase (Compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   </head>
   <body>
     <h1>수박 게임 🍉</h1>
-
-    <div id="hud">
-      <div id="score">점수: 0</div>
-    </div>
-
+    <div id="hud"><div id="score">점수: 0</div></div>
     <canvas id="game"></canvas>
     <div id="gameOver">GAME OVER</div>
 
-    <!-- 랭킹 모달 -->
     <div id="ranking-overlay"></div>
     <div id="ranking-modal">
       <h3>🏆 TOP 5 랭킹</h3>
@@ -142,7 +133,7 @@
     </div>
 
     <script>
-      // ================= Firebase =================
+      // Firebase
       const firebaseConfig = {
         apiKey: 'AIzaSyAhkw341lTuMueuSP5JwycuUUwdpbOvPpc',
         authDomain: 'suikagame-2dc1e.firebaseapp.com',
@@ -157,13 +148,11 @@
       firebase.initializeApp(firebaseConfig);
       const db = firebase.database();
 
-      // ================= 기본 설정 =================
+      // 기본
       const BASE_W = 360,
         BASE_H = 640;
-
       const canvas = document.getElementById('game');
       const ctx = canvas.getContext('2d');
-
       function setupCanvasForDPR() {
         const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
         canvas.width = Math.floor(BASE_W * dpr);
@@ -173,22 +162,22 @@
         ctx.imageSmoothingQuality = 'high';
       }
       setupCanvasForDPR();
-      window.addEventListener('resize', setupCanvasForDPR);
-      window.addEventListener('orientationchange', () =>
+      addEventListener('resize', setupCanvasForDPR);
+      addEventListener('orientationchange', () =>
         setTimeout(setupCanvasForDPR, 100)
       );
 
-      const scoreDiv = document.getElementById('score');
-      const gameOverDiv = document.getElementById('gameOver');
-      const rankingModal = document.getElementById('ranking-modal');
-      const rankingOverlay = document.getElementById('ranking-overlay');
-      const rankingList = document.getElementById('ranking-list');
-      const modalCloseBtn = document.getElementById('modal-close');
+      const scoreDiv = document.getElementById('score'),
+        gameOverDiv = document.getElementById('gameOver');
+      const rankingModal = document.getElementById('ranking-modal'),
+        rankingOverlay = document.getElementById('ranking-overlay'),
+        rankingList = document.getElementById('ranking-list'),
+        modalCloseBtn = document.getElementById('modal-close');
 
       const dangerLine = BASE_H / 5;
       const nickname = localStorage.getItem('nickname') || '익명';
 
-      // ================= 과일 데이터/이미지 =================
+      // 과일
       const fruitData = [
         { name: 'cherry', radius: 20, score: 10 },
         { name: 'grape', radius: 44, score: 20 },
@@ -204,32 +193,29 @@
         const img = new Image();
         img.src = `${f.name}_${charSet}.png`;
         img.onload = () => {
-          assetsLoaded++;
-          if (assetsLoaded === fruitData.length) startGame();
+          if (++assetsLoaded === fruitData.length) startGame();
         };
         fruitImages[f.name] = img;
       });
 
-      // ================= 게임 상태 =================
-      let fruits = [];
-      let fallingFruit = null;
-      let gameOver = false;
-      let score = 0;
-      let rafId = null;
+      // 상태
+      let fruits = [],
+        fallingFruit = null,
+        gameOver = false,
+        score = 0,
+        rafId = null;
 
-      // ================= 물리 파라미터 =================
-      const GRAVITY = 1200 / 3600; // px/frame^2 (고정타임스텝 기준)
-      const FIXED_DT = 1 / 60; // 60Hz
-      const SOLVER_ITERS = 8; // 조금 더 강하게
-      const RESTITUTION = 0.02;
-      const FRICTION = 0.05;
-      const SLEEP_SPEED = 5 / 60;
-      const SLEEP_TIME = 0.25;
-      const PENETRATION_SLOP = 0.5;
-      const POSITION_CORRECT = 0.6;
-
-      // ====== 합체 설정(연속 접촉 기반) ======
-      const MERGE_HOLD_THRESHOLD = 0.05; // 0.05초 연속 접촉 시 합체
+      // 물리
+      const GRAVITY = 1200 / 3600,
+        FIXED_DT = 1 / 60,
+        SOLVER_ITERS = 8,
+        RESTITUTION = 0.02,
+        FRICTION = 0.05,
+        SLEEP_SPEED = 5 / 60,
+        SLEEP_TIME = 0.25,
+        PENETRATION_SLOP = 0.5,
+        POSITION_CORRECT = 0.6;
+      const MERGE_HOLD_THRESHOLD = 0.05;
       let FRUIT_SEQ = 0;
 
       function createFruit(level, x, y) {
@@ -245,7 +231,7 @@
           alive: true,
           settled: false,
           sleepTimer: 0,
-          mergeHold: 0, // 같은 레벨과 연속 접촉 누적시간(초)
+          mergeHold: 0,
         };
       }
       function wake(f) {
@@ -258,36 +244,86 @@
         if (f.settled && f.y + f.radius > BASE_H) f.y = BASE_H - f.radius;
       }
 
-      // ================= 입력(터치/마우스) =================
+      // ===== 입력: 드래그로 조준, 손 떼면 드롭 =====
+      let controlPointerId = null;
+      let isAiming = false;
+
       function getCanvasXFromEvent(e) {
         const rect = canvas.getBoundingClientRect();
-        const clientX = e.clientX ?? (e.touches && e.touches[0]?.clientX) ?? 0;
-        const relX = clientX - rect.left;
-        return (relX / rect.width) * BASE_W; // 화면 픽셀 -> 논리 좌표
+        const x =
+          (e.clientX ?? (e.touches && e.touches[0]?.clientX) ?? 0) - rect.left;
+        return (x / rect.width) * BASE_W;
       }
-      canvas.addEventListener(
-        'pointermove',
-        (e) => {
-          if (!fallingFruit || gameOver) return;
-          e.preventDefault();
-          const x = getCanvasXFromEvent(e);
-          const r = fallingFruit.radius;
-          fallingFruit.x = Math.max(r, Math.min(BASE_W - r, x));
-        },
-        { passive: false }
-      );
+
       canvas.addEventListener(
         'pointerdown',
         (e) => {
-          if (fallingFruit && !gameOver) {
-            e.preventDefault();
-            fruits.push({ ...fallingFruit });
-            fallingFruit = null;
-            spawnNext();
-          }
+          if (gameOver || !fallingFruit) return;
+          // 이 포인터만 제어
+          if (controlPointerId !== null) return;
+          controlPointerId = e.pointerId;
+          canvas.setPointerCapture?.(controlPointerId);
+          isAiming = true;
+
+          // 터치 시작 지점으로 즉시 스냅 (의도치 않은 이전 위치 드롭 방지)
+          const r = fallingFruit.radius;
+          const x = Math.max(r, Math.min(BASE_W - r, getCanvasXFromEvent(e)));
+          fallingFruit.x = x;
+          e.preventDefault();
         },
         { passive: false }
       );
+
+      canvas.addEventListener(
+        'pointermove',
+        (e) => {
+          if (
+            !isAiming ||
+            e.pointerId !== controlPointerId ||
+            !fallingFruit ||
+            gameOver
+          )
+            return;
+          const r = fallingFruit.radius;
+          const x = Math.max(r, Math.min(BASE_W - r, getCanvasXFromEvent(e)));
+          fallingFruit.x = x;
+          e.preventDefault();
+        },
+        { passive: false }
+      );
+
+      function commitDrop() {
+        if (!fallingFruit || gameOver) return;
+        fruits.push({ ...fallingFruit });
+        fallingFruit = null;
+        isAiming = false;
+        if (controlPointerId !== null) {
+          try {
+            canvas.releasePointerCapture?.(controlPointerId);
+          } catch {}
+        }
+        controlPointerId = null;
+        spawnNext();
+      }
+
+      canvas.addEventListener(
+        'pointerup',
+        (e) => {
+          if (e.pointerId !== controlPointerId) return;
+          // 손을 떼는 순간 드롭
+          commitDrop();
+          e.preventDefault();
+        },
+        { passive: false }
+      );
+
+      canvas.addEventListener('pointercancel', (e) => {
+        if (e.pointerId !== controlPointerId) return;
+        // 취소되어도 드롭 처리(원하는 경우 취소로 무시하려면 return)
+        commitDrop();
+      });
+
+      // iOS 롱프레스 메뉴 방지
       canvas.addEventListener('contextmenu', (e) => e.preventDefault());
       document.addEventListener(
         'touchmove',
@@ -299,18 +335,16 @@
 
       function spawnNext() {
         if (gameOver) return;
-        const lvl = Math.floor(Math.random() * 2); // 0~1 레벨만
+        const lvl = Math.floor(Math.random() * 2); // 0~1
         fallingFruit = createFruit(lvl, BASE_W / 2, 40);
       }
 
-      // ================= 물리 처리 =================
+      // 물리 처리
       function applyGravity(f) {
         if (!f.alive || f.settled) return;
         f.vy += GRAVITY;
-
-        // 추가: 공기 저항
-        f.vx *= 0.985; // 가로속도 서서히 줄이기
-        f.vy *= 0.995; // 세로속도 살짝 줄이기
+        f.vx *= 0.985;
+        f.vy *= 0.995;
       }
       function integrate(f) {
         if (!f.alive || f.settled) return;
@@ -342,37 +376,31 @@
       function solvePair(a, b) {
         if (!a.alive || !b.alive) return;
         const dx = b.x - a.x,
-          dy = b.y - a.y;
-        const dist = Math.hypot(dx, dy);
-        const minDist = a.radius + b.radius;
+          dy = b.y - a.y,
+          dist = Math.hypot(dx, dy),
+          minDist = a.radius + b.radius;
         if (dist >= minDist) return;
-
         const nx = dx / (dist || 1),
-          ny = dy / (dist || 1);
-        const tx = -ny,
+          ny = dy / (dist || 1),
+          tx = -ny,
           ty = nx;
-
         const rvx = b.vx - a.vx,
-          rvy = b.vy - a.vy;
-        const vrelN = rvx * nx + rvy * ny;
-        const vrelT = rvx * tx + rvy * ty;
-
+          rvy = b.vy - a.vy,
+          vrelN = rvx * nx + rvy * ny,
+          vrelT = rvx * tx + rvy * ty;
         let jn = (-(1 + RESTITUTION) * vrelN) / 2;
         if (jn < 0) jn = 0;
         let jt = -vrelT * FRICTION;
-
         a.vx -= jn * nx + jt * tx;
         a.vy -= jn * ny + jt * ty;
         b.vx += jn * nx + jt * tx;
         b.vy += jn * ny + jt * ty;
-
-        const penetration = Math.max(0, minDist - dist - PENETRATION_SLOP);
-        const corr = (penetration * POSITION_CORRECT) / 2;
+        const penetration = Math.max(0, minDist - dist - PENETRATION_SLOP),
+          corr = (penetration * POSITION_CORRECT) / 2;
         a.x -= nx * corr;
         a.y -= ny * corr;
         b.x += nx * corr;
         b.y += ny * corr;
-
         wake(a);
         wake(b);
       }
@@ -393,28 +421,22 @@
         }
       }
 
-      // ====== “같은 레벨 접촉” 판정 + 누적 ======
+      // 합체
       function isSameLevelInContact(a, b) {
         if (!a.alive || !b.alive) return false;
         if (a.level !== b.level) return false;
         const dx = b.x - a.x,
-          dy = b.y - a.y;
-        const dist = Math.hypot(dx, dy);
-        const minDist = a.radius + b.radius;
-
-        // 확실한 겹침
+          dy = b.y - a.y,
+          dist = Math.hypot(dx, dy),
+          minDist = a.radius + b.radius;
         if (dist <= minDist - 0.25) return true;
-
-        // 거의 닿아 있는 상태 + 상대속도 매우 낮음 → 접촉으로 간주
         const relSpeed = Math.hypot(b.vx - a.vx, b.vy - a.vy);
         if (dist <= minDist + 0.6 && relSpeed < 6 / 60) return true;
-
         return false;
       }
       function updateMergeHolds(dt) {
         for (const f of fruits) {
           if (!f.alive) continue;
-          // 떨어지면 서서히 감소(너무 빨리 0 되지 않게)
           f.mergeHold = Math.max(0, f.mergeHold - dt * 0.25);
         }
         for (let i = 0; i < fruits.length; i++) {
@@ -435,23 +457,20 @@
         outer: for (let i = 0; i < fruits.length; i++) {
           const a = fruits[i];
           if (!a.alive || a.mergeHold < MERGE_HOLD_THRESHOLD) continue;
-
           for (let j = i + 1; j < fruits.length; j++) {
             const b = fruits[j];
             if (!b.alive || b.mergeHold < MERGE_HOLD_THRESHOLD) continue;
             if (!isSameLevelInContact(a, b)) continue;
             if (a.level !== b.level) continue;
             if (a.level >= fruitData.length - 1) continue;
-
             const mx = (a.x + b.x) / 2,
               my = (a.y + b.y) / 2;
             const nf = createFruit(a.level + 1, mx, my);
             const overlap =
               a.radius + b.radius - Math.hypot(b.x - a.x, b.y - a.y);
-            nf.y -= Math.max(0, overlap) * 0.25; // 조금 위로
+            nf.y -= Math.max(0, overlap) * 0.25;
             nf.vx = (a.vx + b.vx) * 0.25;
             nf.vy = (a.vy + b.vy) * 0.25;
-
             clampPosition(nf);
             fruits.push(nf);
             score += fruitData[a.level + 1].score;
@@ -465,9 +484,9 @@
         if (merged) fruits = fruits.filter((f) => f.alive);
       }
 
-      // ================= 위험선 =================
-      function isTouchingOthers(f, others) {
-        return others.some(
+      // 위험선
+      function isTouchingOthers(f, arr) {
+        return arr.some(
           (o) =>
             o !== f &&
             o.alive &&
@@ -482,7 +501,7 @@
         );
       }
 
-      // ================= 렌더 =================
+      // 렌더
       function drawFruit(f) {
         const img = fruitImages[fruitData[f.level].name];
         if (img && img.complete) {
@@ -501,20 +520,17 @@
         }
       }
 
-      // ================= 메인 루프(고정 타임스텝) =================
+      // 루프
       let lastTime = performance.now(),
         acc = 0;
       function loop(now = performance.now()) {
-        const elapsed = Math.min(0.1, (now - lastTime) / 1000); // 100ms 캡
+        const elapsed = Math.min(0.1, (now - lastTime) / 1000);
         lastTime = now;
         acc += elapsed;
-
         while (acc >= FIXED_DT) {
           for (const f of fruits) applyGravity(f);
           for (const f of fruits) integrate(f);
           for (const f of fruits) solveWalls(f);
-
-          // 원-원 충돌 반복 해결
           for (let k = 0; k < SOLVER_ITERS; k++) {
             for (let i = 0; i < fruits.length; i++) {
               const a = fruits[i];
@@ -526,17 +542,12 @@
               }
             }
           }
-
           for (const f of fruits) updateSleep(f, FIXED_DT);
-
-          // 접촉시간 누적 → 합체 시도
           updateMergeHolds(FIXED_DT);
           tryMergeAll();
-
           acc -= FIXED_DT;
         }
 
-        // ---- 렌더 ----
         ctx.clearRect(0, 0, BASE_W, BASE_H);
         ctx.save();
         ctx.strokeStyle = 'red';
@@ -546,7 +557,6 @@
         ctx.lineTo(BASE_W, dangerLine);
         ctx.stroke();
         ctx.restore();
-
         if (fallingFruit) {
           ctx.globalAlpha = 0.7;
           drawFruit(fallingFruit);
@@ -565,10 +575,10 @@
         }
       }
 
-      // ================= 점수 저장/랭킹 =================
+      // 랭킹
       function saveScoreToFirebase(score) {
-        const newRef = db.ref('records').push();
-        newRef
+        const ref = db.ref('records').push();
+        ref
           .set({ name: nickname, score, timestamp: Date.now() })
           .then(showRankingModal)
           .catch(() => showRankingModal());
@@ -578,11 +588,10 @@
           .orderByChild('score')
           .limitToLast(100)
           .once('value')
-          .then((snapshot) => {
-            const raw = snapshot.val();
+          .then((s) => {
+            const raw = s.val();
             const data = raw ? Object.values(raw) : [];
             const sorted = data.sort((a, b) => b.score - a.score).slice(0, 5);
-
             rankingList.innerHTML = '';
             if (sorted.length === 0) {
               rankingList.innerHTML = '<li>랭킹 기록 없음</li>';
@@ -605,7 +614,12 @@
       rankingOverlay.addEventListener('click', () => closeModal());
       modalCloseBtn.addEventListener('click', () => closeModal());
 
-      // ================= 시작 =================
+      // 시작
+      function spawnNext() {
+        if (gameOver) return;
+        const lvl = Math.floor(Math.random() * 2);
+        fallingFruit = createFruit(lvl, BASE_W / 2, 40);
+      }
       function startGame() {
         fruits = [];
         score = 0;
