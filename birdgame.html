@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Walk the Stork — Giraffe Neck (Harder)</title>
+    <style>
+      :root {
+        --bg: #0f1117;
+        --fg: #e2e8f0;
+        --accent: #60a5fa;
+        --muted: #94a3b8;
+        --ink: #0b0b0b;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        background: linear-gradient(#0b0d12, #0f1117 30%, #0f1117);
+        color: var(--fg);
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+      header {
+        width: min(100%, 860px);
+        padding: 16px 20px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .title {
+        font-weight: 800;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: #111827;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .wrap {
+        width: min(100%, 860px);
+        aspect-ratio: 16/9;
+        background: #111827;
+        border: 1px solid #1f2937;
+        border-radius: 16px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35),
+          inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+      }
+      canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        background: linear-gradient(#1f2937 0 60%, #0b0f16 60%);
+      }
+      .hud {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        display: flex;
+        flex-direction: column;
+        padding: 14px;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .spacer {
+        flex: 1;
+      }
+      .score {
+        font-weight: 700;
+        font-size: clamp(16px, 2.2vw, 22px);
+        background: #0b0f16bb;
+        padding: 6px 10px;
+        border-radius: 10px;
+        border: 1px solid #1f2937;
+      }
+      .btns {
+        position: absolute;
+        bottom: 14px;
+        left: 14px;
+        right: 14px;
+        display: flex;
+        gap: 10px;
+        pointer-events: auto;
+      }
+      button {
+        appearance: none;
+        border: 1px solid #1f2937;
+        background: #0b0f16;
+        color: var(--fg);
+        padding: 10px 14px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 14px;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+      }
+      button.primary {
+        background: var(--accent);
+        color: #081226;
+      }
+      .help {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        text-align: center;
+        width: min(92%, 520px);
+        background: #0b0f16dd;
+        border: 1px solid #1f2937;
+        border-radius: 16px;
+        padding: 18px;
+      }
+      .kbd {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        background: #111827;
+        border: 1px solid #1f2937;
+        padding: 2px 6px;
+        border-radius: 8px;
+      }
+      .overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(2px);
+      }
+      .gameover {
+        background: #0b0f16dd;
+        border: 1px solid #1f2937;
+        border-radius: 16px;
+        padding: 18px;
+        width: min(92%, 480px);
+        text-align: center;
+      }
+      .bar {
+        height: 6px;
+        width: 100%;
+        background: #0b0f16;
+        border: 1px solid #1f2937;
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .bar > span {
+        display: block;
+        height: 100%;
+        width: 0%;
+      }
+      .touch {
+        position: absolute;
+        inset: 0;
+        display: none;
+      }
+      .touch > div {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 50%;
+      }
+      .touch .left {
+        left: 0;
+        border-right: 1px dashed #ffffff15;
+      }
+      .touch .right {
+        right: 0;
+        border-left: 1px dashed #00000015;
+      }
+      @media (hover: none) {
+        .touch {
+          display: block;
+        }
+      }
+      footer {
+        color: var(--muted);
+        font-size: 12px;
+        padding: 10px 0 20px;
+      }
+
+      /* 우클릭 메뉴/롱프레스/드래그/선택 방지 */
+      html,
+      body,
+      #game,
+      canvas {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+        touch-action: none;
+      }
+      img,
+      canvas {
+        -webkit-user-drag: none;
+      }
+    </style>
+  </head>
+  <body oncontextmenu="return false">
+    <header>
+      <div class="title">🕊️ Walk the Stork — Giraffe Neck (Harder)</div>
+      <div class="pill">
+        PC: ←/→ · 마우스 좌/우클릭 · 모바일: 화면 좌/우 터치
+      </div>
+    </header>
+
+    <div class="wrap" id="game">
+      <canvas id="c" width="1280" height="720"></canvas>
+
+      <div class="hud">
+        <div class="row">
+          <div class="score">거리: <span id="dist">0.0</span> m</div>
+          <div class="spacer"></div>
+          <div class="score">최고기록: <span id="best">0.0</span> m</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="btns">
+          <button id="start" class="primary">▶ 시작 / 재시작 (Space)</button>
+          <button id="pause">⏸ 일시정지 (P)</button>
+        </div>
+      </div>
+
+      <div id="startHelp" class="overlay">
+        <div class="help">
+          <div style="font-size: 20px; font-weight: 800">
+            머리는 항상 수직, 난이도 ↑
+          </div>
+          <div>
+            몸이 기울어도 목·머리는 수직을 유지합니다. 바닥에 실제로 닿으면 게임
+            종료.
+          </div>
+          <div>
+            조작: <span class="kbd">←</span>/<span class="kbd">→</span> ·
+            <span class="kbd">마우스 좌/우</span> ·
+            <span class="kbd">화면 좌/우 터치</span>
+          </div>
+          <div class="bar"><span id="tiltBar"></span></div>
+        </div>
+      </div>
+
+      <div class="touch" id="touchZone" aria-hidden="true">
+        <div class="left"></div>
+        <div class="right"></div>
+      </div>
+
+      <div id="over" class="overlay" style="display: none">
+        <div class="gameover">
+          <div style="font-size: 22px; font-weight: 800; margin-bottom: 8px">
+            게임 오버
+          </div>
+          <div style="margin-bottom: 14px">
+            이번 거리: <b><span id="last">0.0</span> m</b> · 최고기록:
+            <b><span id="best2">0.0</span> m</b>
+          </div>
+          <button id="retry" class="primary">다시하기</button>
+        </div>
+      </div>
+    </div>
+
+    <footer>© 2025 — HTML 구현 버전 (개인 학습/데모용)</footer>
+
+    <script>
+      (() => {
+        const canvas = document.getElementById('c');
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width,
+          H = canvas.height;
+
+        const ui = {
+          dist: document.getElementById('dist'),
+          best: document.getElementById('best'),
+          best2: document.getElementById('best2'),
+          last: document.getElementById('last'),
+          start: document.getElementById('start'),
+          pause: document.getElementById('pause'),
+          startHelp: document.getElementById('startHelp'),
+          over: document.getElementById('over'),
+          retry: document.getElementById('retry'),
+          tiltBar: document.getElementById('tiltBar'),
+          touch: document.getElementById('touchZone'),
+        };
+
+        document.addEventListener('contextmenu', (e) => e.preventDefault(), {
+          capture: true,
+        });
+        ['selectstart', 'dragstart'].forEach((ev) => {
+          document.addEventListener(ev, (e) => e.preventDefault(), {
+            capture: true,
+          });
+        });
+
+        // ===== Visual / Geometry =====
+        const VIS_SCALE = 1.35;
+        const LEG_FACTOR = 1.4;
+        const LEG_LEN = 54 * LEG_FACTOR * VIS_SCALE;
+        const HIP_OFF = 10;
+
+        const DIMS = {
+          bodyRX: 26 * VIS_SCALE + 10,
+          bodyRY: 26 * VIS_SCALE * 1.1,
+          headR: 12 * VIS_SCALE,
+          neckLen: 86 * VIS_SCALE,
+        };
+
+        const GROUND_Y = Math.round(H * 0.72);
+
+        // 🚶 걷기 애니메이션
+        const GAIT = { width: 14, stepAmp: 12, liftAmp: 10, strideK: 9.0 };
+
+        // ===== Physics (난이도 ↑ 조정) =====
+        const params = {
+          gravity: 5.5,
+          torque: 80,
+          friction: 1.7,
+          inertia: 1.6, // ↓ 덜 관성적이라 빨리 기운다
+          horizSpeedBase: 1.05,
+          horizSpeedTiltLoss: 0.7,
+          fallAngle: 0.54, // ↓ 허용 기울기 축소
+          meterScale: 70,
+          noise: 2.6, // ↑ 미세 흔들림
+          idleDrift: 3.2, // ↑ 무입력 드리프트
+          driftChangeSec: 2.6,
+          omegaLimit: 3.0,
+          inputSlew: 12,
+        };
+
+        // 랜덤 토크 범위 (난이도 ↑)
+        const RNG = { min: 0.75, max: 1.35 };
+
+        // ===== State =====
+        const stork = {
+          x: W * 0.2,
+          theta: 0,
+          omega: 0,
+          vx: 0,
+          alive: false,
+          paused: false,
+          distance: 0,
+          best: +localStorage.getItem('stork_best') || 0,
+        };
+        let camX = 0;
+
+        const input = { left: false, right: false };
+        let inputSmoothed = 0; // -1..+1
+        let factorLeft = 1,
+          factorRight = 1;
+
+        const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+        const lerp = (a, b, t) => a + (b - a) * t;
+        const randf = (a, b) => a + Math.random() * (b - a);
+
+        // ---------- Draw helpers ----------
+        function drawGround() {
+          const y = GROUND_Y,
+            tileW = 120,
+            h = 80;
+          ctx.fillStyle = '#0b0f16';
+          ctx.fillRect(0, y, W, H - y);
+          for (let x = -((camX % tileW) + tileW); x < W + tileW; x += tileW) {
+            ctx.fillStyle = '#101826';
+            ctx.fillRect(x, y, tileW - 2, h);
+            ctx.fillStyle = '#0e1624';
+            ctx.fillRect(x, y + 36, tileW - 2, 2);
+          }
+          ctx.strokeStyle = 'rgba(248,113,113,.45)';
+          ctx.setLineDash([8, 12]);
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(W, y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        function drawLeg(hipX, hipY, baseX, phase) {
+          ctx.strokeStyle = '#d1d5db';
+          ctx.lineWidth = 5;
+          ctx.lineCap = 'round';
+          const fx = baseX + GAIT.stepAmp * Math.sin(phase);
+          const fy = 0;
+          const lift = GAIT.liftAmp * Math.max(0, Math.sin(phase));
+          const kx = (hipX + fx) / 2;
+          const ky = (hipY + fy) / 2 - lift;
+          ctx.beginPath();
+          ctx.moveTo(hipX, hipY);
+          ctx.lineTo(kx, ky);
+          ctx.moveTo(kx, ky);
+          ctx.lineTo(fx, fy);
+          ctx.stroke();
+          ctx.lineWidth = 6;
+          ctx.beginPath();
+          ctx.moveTo(fx - 6, fy + 2);
+          ctx.lineTo(fx + 8, fy + 2);
+          ctx.stroke();
+        }
+
+        function drawStork() {
+          const x = stork.x - camX;
+          const { bodyRX, bodyRY, headR, neckLen } = DIMS;
+          const bodyY = -LEG_LEN;
+          const hipY = -LEG_LEN + HIP_OFF;
+
+          ctx.save();
+          ctx.translate(x, GROUND_Y);
+          ctx.rotate(stork.theta);
+
+          // 다리 (걷기)
+          const ph = stork.distance * GAIT.strideK;
+          drawLeg(-10, hipY, -GAIT.width, ph);
+          drawLeg(12, hipY + 4, GAIT.width, ph + Math.PI);
+
+          // 몸통
+          ctx.fillStyle = '#ffffff';
+          ctx.strokeStyle = 'var(--ink)';
+          ctx.lineWidth = 6;
+          ctx.beginPath();
+          ctx.ellipse(0, bodyY, bodyRX, bodyRY, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // 목/머리: 수직 유지 + 목 위치를 더 앞쪽으로
+          const neckBaseLocal = {
+            x: bodyRX * 0.55,
+            y: bodyY - bodyRY * 0.82,
+          }; /* ← 앞쪽으로 이동 */
+          ctx.save();
+          ctx.translate(neckBaseLocal.x, neckBaseLocal.y);
+          ctx.rotate(-stork.theta);
+
+          // 목
+          ctx.strokeStyle = 'var(--ink)';
+          ctx.lineWidth = 6;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(0, -neckLen);
+          ctx.stroke();
+
+          // 머리
+          const headCY = -neckLen - headR * 0.1;
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(0, headCY, headR, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // 눈
+          ctx.fillStyle = '#111';
+          ctx.beginPath();
+          ctx.arc(3, headCY - 2, 2.2, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 부리
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.moveTo(headR * 0.1, headCY);
+          ctx.lineTo(headR * 2.2, headCY);
+          ctx.stroke();
+
+          ctx.restore();
+          ctx.restore();
+
+          // 그림자
+          ctx.fillStyle = 'rgba(0,0,0,.35)';
+          ctx.beginPath();
+          ctx.ellipse(x, GROUND_Y - 6, 36, 10, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        function drawBackground() {
+          ctx.fillStyle = '#1f2937';
+          ctx.fillRect(0, 0, W, H);
+          const hills = [
+            { y: H * 0.7, h: 80, s: 0.2, c: '#172032' },
+            { y: H * 0.74, h: 60, s: 0.4, c: '#131b2a' },
+          ];
+          hills.forEach((l) => {
+            ctx.fillStyle = l.c;
+            const step = 240;
+            for (
+              let x = -((camX * l.s) % step) - step;
+              x < W + step;
+              x += step
+            ) {
+              ctx.beginPath();
+              ctx.moveTo(x, l.y);
+              ctx.quadraticCurveTo(x + step * 0.5, l.y - l.h, x + step, l.y);
+              ctx.lineTo(x + step, H);
+              ctx.lineTo(x, H);
+              ctx.closePath();
+              ctx.fill();
+            }
+          });
+        }
+
+        function render() {
+          ctx.clearRect(0, 0, W, H);
+          drawBackground();
+          drawGround();
+          drawStork();
+        }
+
+        // ---------- Collision (must touch ground) ----------
+        const HIT_EPS = 2;
+        function isTouchingGround() {
+          const { bodyRX, bodyRY, headR, neckLen } = DIMS;
+          const bodyY = -LEG_LEN;
+
+          // 몸통 아래 반원 샘플(엉덩이 포함)
+          const localPts = [];
+          for (let deg = 200; deg <= 340; deg += 20) {
+            const a = (deg * Math.PI) / 180;
+            localPts.push({
+              x: bodyRX * Math.cos(a),
+              y: bodyY + bodyRY * Math.sin(a),
+            });
+          }
+
+          // 목/머리 월드 Y (헤드는 수직)
+          const neckBase = { x: bodyRX * 0.55, y: bodyY - bodyRY * 0.82 };
+          const s = Math.sin(stork.theta),
+            c = Math.cos(stork.theta);
+          const neckBaseWorldY = GROUND_Y + (neckBase.x * s + neckBase.y * c);
+          const headCY = neckBaseWorldY - neckLen - headR * 0.1;
+          const headBottomY = headCY + headR;
+          const beakY = headCY;
+
+          for (const p of localPts) {
+            const wy = GROUND_Y + (p.x * s + p.y * c);
+            if (wy >= GROUND_Y - HIT_EPS) return true;
+          }
+          if (headBottomY >= GROUND_Y - HIT_EPS) return true;
+          if (beakY >= GROUND_Y - HIT_EPS) return true;
+          return false;
+        }
+
+        // ===== Simulation =====
+        let lastT = performance.now();
+        let driftDir = Math.random() < 0.5 ? -1 : 1,
+          driftTimer = 0;
+
+        function update(dt) {
+          if (!stork.alive || stork.paused) return;
+
+          const raw = (input.left ? -1 : 0) + (input.right ? 1 : 0);
+          const k = 1 - Math.exp(-params.inputSlew * dt);
+          let target = Math.tanh(raw * 1.2);
+          inputSmoothed += (target - inputSmoothed) * k;
+
+          const tiltAbs = Math.abs(stork.theta);
+          const torqueGain = 1 + 0.25 * Math.min(1, tiltAbs / params.fallAngle);
+
+          // 방향별 랜덤 배율
+          let effInput = inputSmoothed;
+          if (effInput > 0) effInput *= factorRight;
+          else if (effInput < 0) effInput *= factorLeft;
+
+          const torqueInput = params.torque * effInput * torqueGain;
+          const gravityTorque = +params.gravity * Math.sin(stork.theta);
+
+          driftTimer += dt;
+          if (driftTimer > params.driftChangeSec) {
+            driftTimer = 0;
+            driftDir = Math.random() < 0.5 ? -1 : 1;
+          }
+          const idle = raw === 0;
+          const driftTorque = idle ? driftDir * params.idleDrift : 0;
+          const noiseTorque = idle ? (Math.random() - 0.5) * params.noise : 0;
+
+          const alpha =
+            (gravityTorque + driftTorque + noiseTorque + torqueInput) /
+            params.inertia;
+
+          stork.omega += alpha * dt;
+          stork.omega *= Math.exp(-params.friction * dt);
+          stork.omega = clamp(
+            stork.omega,
+            -params.omegaLimit,
+            params.omegaLimit
+          );
+          stork.theta += stork.omega * dt;
+
+          const speed = Math.max(
+            0,
+            params.horizSpeedBase - tiltAbs * params.horizSpeedTiltLoss
+          );
+          const jitter = (Math.random() - 0.5) * 0.03;
+          stork.vx = Math.max(0, speed + jitter);
+
+          stork.x += stork.vx * params.meterScale * dt;
+          stork.distance += stork.vx * dt;
+          camX = lerp(camX, stork.x - W * 0.35, 0.08);
+
+          const pct = Math.max(0, Math.min(1, tiltAbs / params.fallAngle));
+          ui.tiltBar.style.width = (pct * 100).toFixed(1) + '%';
+          ui.tiltBar.style.background =
+            pct > 0.85 ? '#f87171' : pct > 0.6 ? '#fdba74' : '#60a5fa';
+
+          if (tiltAbs > params.fallAngle && isTouchingGround()) gameOver();
+        }
+
+        function loop(t) {
+          const dt = Math.min(0.033, (t - lastT) / 1000);
+          lastT = t;
+          update(dt);
+          render();
+          requestAnimationFrame(loop);
+        }
+
+        // ===== Controls / UI =====
+        function setRunning(run) {
+          stork.alive = run;
+          ui.startHelp.style.display = run ? 'none' : '';
+        }
+        function startGame() {
+          stork.theta = 0;
+          stork.omega = 0;
+          stork.x = W * 0.2;
+          stork.distance = 0;
+          camX = 0;
+          stork.paused = false;
+          driftTimer = 0;
+          driftDir = Math.random() < 0.5 ? -1 : 1;
+          inputSmoothed = 0;
+          factorLeft = factorRight = 1;
+          setRunning(true);
+          ui.over.style.display = 'none';
+        }
+        function gameOver() {
+          setRunning(false);
+          ui.last.textContent = stork.distance.toFixed(1);
+          stork.best = Math.max(stork.best, stork.distance);
+          localStorage.setItem('stork_best', stork.best.toFixed(1));
+          ui.best.textContent = stork.best.toFixed(1);
+          ui.best2.textContent = stork.best.toFixed(1);
+          ui.over.style.display = '';
+        }
+        function togglePause() {
+          if (!stork.alive) return;
+          stork.paused = !stork.paused;
+          ui.pause.textContent = stork.paused ? '▶ 재개 (P)' : '⏸ 일시정지 (P)';
+        }
+
+        const rollLeft = () => (factorLeft = randf(RNG.min, RNG.max));
+        const rollRight = () => (factorRight = randf(RNG.min, RNG.max));
+
+        const onKey = (e, down) => {
+          if (e.repeat) return;
+          if (e.code === 'ArrowLeft') {
+            if (down && !input.left) rollLeft();
+            input.left = down;
+            e.preventDefault();
+          }
+          if (e.code === 'ArrowRight') {
+            if (down && !input.right) rollRight();
+            input.right = down;
+            e.preventDefault();
+          }
+          if (down && e.code === 'Space') {
+            startGame();
+            e.preventDefault();
+          }
+          if (down && e.code === 'KeyP') {
+            togglePause();
+            e.preventDefault();
+          }
+          if (!down && e.code === 'ArrowLeft') factorLeft = 1;
+          if (!down && e.code === 'ArrowRight') factorRight = 1;
+        };
+        window.addEventListener('keydown', (e) => onKey(e, true));
+        window.addEventListener('keyup', (e) => onKey(e, false));
+
+        window.addEventListener('mousedown', (e) => {
+          if (e.button === 0) {
+            if (!input.left) rollLeft();
+            input.left = true;
+          }
+          if (e.button === 2) {
+            if (!input.right) rollRight();
+            input.right = true;
+          }
+        });
+        window.addEventListener('mouseup', (e) => {
+          if (e.button === 0) {
+            input.left = false;
+            factorLeft = 1;
+          }
+          if (e.button === 2) {
+            input.right = false;
+            factorRight = 1;
+          }
+        });
+
+        // 터치
+        const setTouch = (x, down) => {
+          const rect = canvas.getBoundingClientRect();
+          const relX = x - rect.left;
+          const leftSide = relX < rect.width / 2;
+          if (down) {
+            if (leftSide) {
+              if (!input.left) rollLeft();
+              input.left = true;
+              input.right = false;
+            } else {
+              if (!input.right) rollRight();
+              input.right = true;
+              input.left = false;
+            }
+          } else {
+            input.left = input.right = false;
+            factorLeft = factorRight = 1;
+          }
+        };
+        ui.touch.addEventListener('touchstart', (e) => {
+          setTouch(e.touches[0].clientX, true);
+        });
+        ui.touch.addEventListener('touchmove', (e) => {
+          setTouch(e.touches[0].clientX, true);
+        });
+        ui.touch.addEventListener('touchend', (e) => {
+          setTouch(0, false);
+        });
+
+        // 시작/일시정지
+        ui.start.onclick = startGame;
+        ui.retry.onclick = startGame;
+        ui.pause.onclick = togglePause;
+        ui.startHelp.addEventListener('click', () => {
+          ui.startHelp.style.display = 'none';
+          startGame();
+        });
+
+        // 초기 UI
+        ui.best.textContent = stork.best.toFixed(1);
+        setInterval(() => {
+          ui.dist.textContent = stork.distance.toFixed(1);
+        }, 100);
+        requestAnimationFrame((t) => {
+          loop(t);
+        });
+      })();
+    </script>
+  </body>
+</html>
